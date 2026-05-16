@@ -3,21 +3,17 @@ import { useState } from "react";
 import logo from "../assets/logo.png";
 
 export default function LoginRegister() {
-  const [isRegister, setIsRegister] =
-    useState(false);
+  const [isRegister, setIsRegister] = useState(false);
 
-  const [isForgotPassword, setIsForgotPassword] =
-    useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   const [email, setEmail] = useState("");
 
   const [name, setName] = useState("");
 
-  const [password, setPassword] =
-    useState("");
+  const [password, setPassword] = useState("");
 
-  const [confirmPassword, setConfirmPassword] =
-    useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   return (
     <div
@@ -91,8 +87,8 @@ export default function LoginRegister() {
             {isForgotPassword
               ? "Password Recovery"
               : isRegister
-              ? "Create Account"
-              : "Login to Account"}
+                ? "Create Account"
+                : "Login to Account"}
           </h1>
 
           {/* FORM */}
@@ -118,9 +114,7 @@ export default function LoginRegister() {
               <input
                 type="text"
                 value={email}
-                onChange={(e) =>
-                  setEmail(e.target.value)
-                }
+                onChange={(e) => setEmail(e.target.value)}
                 className="
                   h-[42px]
                   w-full
@@ -145,11 +139,10 @@ export default function LoginRegister() {
 
             {/* NAME */}
 
-            {isRegister &&
-              !isForgotPassword && (
-                <div className="mt-5">
-                  <label
-                    className="
+            {isRegister && !isForgotPassword && (
+              <div className="mt-5">
+                <label
+                  className="
                       mb-2
                       block
 
@@ -158,19 +151,15 @@ export default function LoginRegister() {
 
                       text-black
                     "
-                  >
-                    Your Name
-                  </label>
+                >
+                  Your Name
+                </label>
 
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) =>
-                      setName(
-                        e.target.value
-                      )
-                    }
-                    className="
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="
                       h-[42px]
                       w-full
 
@@ -189,9 +178,9 @@ export default function LoginRegister() {
 
                       focus:border-[#e31e24]
                     "
-                  />
-                </div>
-              )}
+                />
+              </div>
+            )}
 
             {/* PASSWORD */}
 
@@ -214,11 +203,7 @@ export default function LoginRegister() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) =>
-                    setPassword(
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => setPassword(e.target.value)}
                   className="
                     h-[42px]
                     w-full
@@ -244,11 +229,10 @@ export default function LoginRegister() {
 
             {/* CONFIRM PASSWORD */}
 
-            {isRegister &&
-              !isForgotPassword && (
-                <div className="mt-5">
-                  <label
-                    className="
+            {isRegister && !isForgotPassword && (
+              <div className="mt-5">
+                <label
+                  className="
                       mb-2
                       block
 
@@ -257,19 +241,15 @@ export default function LoginRegister() {
 
                       text-black
                     "
-                  >
-                    Re-Enter Password
-                  </label>
+                >
+                  Re-Enter Password
+                </label>
 
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) =>
-                      setConfirmPassword(
-                        e.target.value
-                      )
-                    }
-                    className="
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="
                       h-[42px]
                       w-full
 
@@ -288,9 +268,9 @@ export default function LoginRegister() {
 
                       focus:border-[#e31e24]
                     "
-                  />
-                </div>
-              )}
+                />
+              </div>
+            )}
 
             {/* LINKS */}
 
@@ -303,15 +283,10 @@ export default function LoginRegister() {
                 justify-between
               "
             >
-              {!isRegister &&
-              !isForgotPassword ? (
+              {!isRegister && !isForgotPassword ? (
                 <>
                   <button
-                    onClick={() =>
-                      setIsForgotPassword(
-                        true
-                      )
-                    }
+                    onClick={() => setIsForgotPassword(true)}
                     className="
                       cursor-pointer
 
@@ -329,9 +304,7 @@ export default function LoginRegister() {
                   </button>
 
                   <button
-                    onClick={() =>
-                      setIsRegister(true)
-                    }
+                    onClick={() => setIsRegister(true)}
                     className="
                       cursor-pointer
 
@@ -350,9 +323,7 @@ export default function LoginRegister() {
                 </>
               ) : isRegister ? (
                 <button
-                  onClick={() =>
-                    setIsRegister(false)
-                  }
+                  onClick={() => setIsRegister(false)}
                   className="
                     cursor-pointer
 
@@ -370,11 +341,7 @@ export default function LoginRegister() {
                 </button>
               ) : (
                 <button
-                  onClick={() =>
-                    setIsForgotPassword(
-                      false
-                    )
-                  }
+                  onClick={() => setIsForgotPassword(false)}
                   className="
                     cursor-pointer
 
@@ -430,8 +397,8 @@ export default function LoginRegister() {
                 {isForgotPassword
                   ? "Send Link"
                   : isRegister
-                  ? "Sign Up"
-                  : "Login"}
+                    ? "Sign Up"
+                    : "Login"}
               </button>
             </div>
 
@@ -523,7 +490,6 @@ export default function LoginRegister() {
                       w-[24px]
                     "
                   />
-
                   Sign in with Google
                 </button>
 
@@ -569,7 +535,6 @@ export default function LoginRegister() {
                       w-[20px]
                     "
                   />
-
                   Sign in with Microsoft
                 </button>
               </>

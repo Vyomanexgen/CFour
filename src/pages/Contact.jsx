@@ -1,8 +1,4 @@
-import {
-  RiMapPinFill,
-  RiPhoneFill,
-  RiMailFill,
-} from "@remixicon/react";
+import { RiMapPinFill, RiPhoneFill, RiMailFill } from "@remixicon/react";
 
 import topImg from "../assets/contactUs/top.png";
 
@@ -303,16 +299,13 @@ export default function Contact() {
               lg:text-[28px]
             "
           >
-            We’d love to hear from you. Whether you have
-            a question about our services, need support,
-            or want to discuss a new project, our team is
-            always ready to assist. Reach out through the
-            contact form, email, or phone, and we will
-            respond as quickly as possible. Your
-            feedback, inquiries, and ideas are important
-            to us, and we look forward to connecting with
-            you and building lasting relationships based
-            on trust and quality service.
+            We’d love to hear from you. Whether you have a question about our
+            services, need support, or want to discuss a new project, our team
+            is always ready to assist. Reach out through the contact form,
+            email, or phone, and we will respond as quickly as possible. Your
+            feedback, inquiries, and ideas are important to us, and we look
+            forward to connecting with you and building lasting relationships
+            based on trust and quality service.
           </p>
         </div>
       </section>

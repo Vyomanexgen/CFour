@@ -607,9 +607,6 @@ export default function Home() {
           alt="Recommended Product"
         />
       </section>
-
     </>
   );
 }
-
-

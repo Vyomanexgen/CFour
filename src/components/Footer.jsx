@@ -99,9 +99,8 @@ export default function Footer() {
               lg:text-[18px]
             "
           >
-            At Cfour, we provide innovative and dependable
-            electrical products that power homes and
-            businesses with confidence.
+            At Cfour, we provide innovative and dependable electrical products
+            that power homes and businesses with confidence.
           </p>
 
           {/* SOCIAL */}
