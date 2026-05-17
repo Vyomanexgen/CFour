@@ -227,20 +227,24 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <RiMapPinLine size={22} />
 
-              <span>xyz street</span>
+              <span>Gachibowli, Hyderabad, India</span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <a
+              href="tel:+917867789876"
+              className="flex items-center gap-3 hover:text-red-700 transition-colors duration-200"
+            >
               <RiPhoneLine size={22} />
+              <span>+91 7867789876</span>
+            </a>
 
-              <span>+91 8678979878</span>
-            </div>
-
-            <div className="flex items-center gap-3">
+            <a
+              href="mailto:contact@cfour.com"
+              className="flex items-center gap-3 hover:text-red-700 transition-colors duration-200"
+            >
               <RiMailLine size={22} />
-
-              <span>cfour@gmail.com</span>
-            </div>
+              <span>contact@cfour.com</span>
+            </a>
 
             <div className="flex items-center gap-3">
               <RiTimeLine size={22} />

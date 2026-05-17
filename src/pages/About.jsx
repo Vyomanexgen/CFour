@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import topImg from "../assets/aboutus/top.png";
 
 import leftImg from "../assets/aboutus/left-image.png";
@@ -6,17 +8,79 @@ import rightImg1 from "../assets/aboutus/right-image1.png";
 import rightImg2 from "../assets/aboutus/right-image2.png";
 import rightImg3 from "../assets/aboutus/right-image3.png";
 
+function Counter({ end, suffix = "", duration = 2000, startAnimation }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!startAnimation) return;
+
+    let startTimestamp = null;
+
+    const animate = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+
+      // SMOOTH EASE OUT
+
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      setCount(Math.floor(easeOut * end));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [startAnimation, end, duration]);
+
+  return (
+    <span>
+      {count}
+      {suffix}
+    </span>
+  );
+}
+
 export default function About() {
+  const statsRef = useRef(null);
+
+  const [startCount, setStartCount] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setStartCount(true);
+        }
+      },
+      {
+        threshold: 0.3,
+      },
+    );
+
+    if (statsRef.current) {
+      observer.observe(statsRef.current);
+    }
+
+    return () => {
+      if (statsRef.current) {
+        observer.unobserve(statsRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div
       className="
-    w-full
+        w-full
 
-    bg-black
-    text-white
+        bg-black
+        text-white
 
-    pt-[85px]
-  "
+        pt-[85px]
+      "
     >
       {/* TOP BANNER */}
 
@@ -310,6 +374,7 @@ export default function About() {
             {/* STATS */}
 
             <div
+              ref={statsRef}
               className="
                 mt-10
 
@@ -330,7 +395,7 @@ export default function About() {
                     text-white
                   "
                 >
-                  10K+
+                  <Counter end={10} suffix="K+" startAnimation={startCount} />
                 </h3>
 
                 <p
@@ -353,7 +418,7 @@ export default function About() {
                     text-white
                   "
                 >
-                  15K+
+                  <Counter end={15} suffix="K+" startAnimation={startCount} />
                 </h3>
 
                 <p
@@ -376,7 +441,11 @@ export default function About() {
                     text-white
                   "
                 >
-                  10+ yrs
+                  <Counter
+                    end={10}
+                    suffix="+ yrs"
+                    startAnimation={startCount}
+                  />
                 </h3>
 
                 <p
@@ -399,7 +468,7 @@ export default function About() {
                     text-white
                   "
                 >
-                  40+
+                  <Counter end={40} suffix="+" startAnimation={startCount} />
                 </h3>
 
                 <p

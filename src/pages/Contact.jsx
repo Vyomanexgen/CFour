@@ -88,7 +88,7 @@ export default function Contact() {
               lg:text-[30px]
             "
           >
-            “We’re here to help — reach out anytime.”
+            "We're here to help — reach out anytime."
           </p>
         </div>
       </section>
@@ -120,7 +120,26 @@ export default function Contact() {
         >
           {/* ADDRESS */}
 
-          <div>
+          <a
+            href="https://maps.google.com/?q=Gachibowli,Hyderabad,India"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="
+              rounded-2xl
+              border
+              border-white/10
+
+              bg-white/5
+
+              p-8
+
+              transition-all
+              duration-300
+
+              hover:-translate-y-2
+              hover:bg-white/10
+            "
+          >
             <h2
               className="
                 text-[18px]
@@ -128,7 +147,7 @@ export default function Contact() {
 
                 text-white
 
-                lg:text-[38px]
+                lg:text-[34px]
               "
             >
               Address
@@ -138,7 +157,7 @@ export default function Contact() {
               className="
                 mt-3
 
-                text-[22px]
+                text-[20px]
                 font-semibold
                 leading-[1.4]
 
@@ -151,11 +170,28 @@ export default function Contact() {
               <br />
               India
             </p>
-          </div>
+          </a>
 
           {/* PHONE */}
 
-          <div>
+          <a
+            href="tel:+917867789876"
+            className="
+              rounded-2xl
+              border
+              border-white/10
+
+              bg-white/5
+
+              p-8
+
+              transition-all
+              duration-300
+
+              hover:-translate-y-2
+              hover:bg-white/10
+            "
+          >
             <h2
               className="
                 text-[18px]
@@ -163,7 +199,7 @@ export default function Contact() {
 
                 text-white
 
-                lg:text-[38px]
+                lg:text-[34px]
               "
             >
               Phone Number
@@ -173,7 +209,7 @@ export default function Contact() {
               className="
                 mt-3
 
-                text-[22px]
+                text-[20px]
                 font-semibold
 
                 text-white
@@ -183,11 +219,28 @@ export default function Contact() {
             >
               +91 7867789876
             </p>
-          </div>
+          </a>
 
           {/* EMAIL */}
 
-          <div>
+          <a
+            href="mailto:contact@cfour.com"
+            className="
+              rounded-2xl
+              border
+              border-white/10
+
+              bg-white/5
+
+              p-8
+
+              transition-all
+              duration-300
+
+              hover:-translate-y-2
+              hover:bg-white/10
+            "
+          >
             <h2
               className="
                 text-[18px]
@@ -195,7 +248,7 @@ export default function Contact() {
 
                 text-white
 
-                lg:text-[38px]
+                lg:text-[34px]
               "
             >
               Any Inquiries
@@ -205,7 +258,7 @@ export default function Contact() {
               className="
                 mt-3
 
-                text-[22px]
+                text-[20px]
                 font-semibold
 
                 text-white
@@ -213,16 +266,16 @@ export default function Contact() {
                 lg:text-[24px]
               "
             >
-              cfour@gmail.com
+              contact@cfour.com
             </p>
-          </div>
+          </a>
         </div>
 
         {/* ICON LINE */}
 
         <div
           className="
-            mt-12
+            mt-14
 
             flex
             items-center
@@ -231,8 +284,6 @@ export default function Contact() {
             gap-6
           "
         >
-          {/* LEFT LINE */}
-
           <div
             className="
               h-[4px]
@@ -243,8 +294,6 @@ export default function Contact() {
               bg-white
             "
           />
-
-          {/* ICONS */}
 
           <div
             className="
@@ -261,8 +310,6 @@ export default function Contact() {
             <RiMailFill size={38} />
           </div>
 
-          {/* RIGHT LINE */}
-
           <div
             className="
               h-[4px]
@@ -275,13 +322,317 @@ export default function Contact() {
           />
         </div>
 
+        {/* CONTACT FORM */}
+
+        <div
+          className="
+            mx-auto
+
+            mt-20
+
+            max-w-[1000px]
+
+            rounded-[32px]
+            border
+            border-white/10
+
+            bg-white/5
+
+            p-8
+
+            backdrop-blur-md
+
+            md:p-14
+          "
+        >
+          <div className="text-center">
+            <h2
+              className="
+                font-['Oswald']
+                text-[34px]
+                font-bold
+                uppercase
+
+                text-white
+
+                md:text-[52px]
+              "
+            >
+              Reach Out To Us
+            </h2>
+
+            <p
+              className="
+                mt-3
+
+                text-[16px]
+
+                text-gray-300
+
+                md:text-[18px]
+              "
+            >
+              Fill out the form below and our team will contact you shortly.
+            </p>
+          </div>
+
+          <form
+            className="
+              mt-12
+
+              grid
+              gap-6
+
+              md:grid-cols-2
+            "
+          >
+            {/* NAME */}
+
+            <div className="flex flex-col">
+              <label
+                className="
+                  mb-2
+
+                  text-[15px]
+                  font-semibold
+
+                  text-gray-300
+                "
+              >
+                Full Name
+              </label>
+
+              <input
+                type="text"
+                placeholder="Enter your name"
+                className="
+                  rounded-xl
+                  border
+                  border-white/10
+
+                  bg-black/40
+
+                  px-5
+                  py-4
+
+                  text-white
+
+                  outline-none
+
+                  transition-all
+                  duration-300
+
+                  focus:border-red-500
+                "
+              />
+            </div>
+
+            {/* EMAIL */}
+
+            <div className="flex flex-col">
+              <label
+                className="
+                  mb-2
+
+                  text-[15px]
+                  font-semibold
+
+                  text-gray-300
+                "
+              >
+                Email Address
+              </label>
+
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="
+                  rounded-xl
+                  border
+                  border-white/10
+
+                  bg-black/40
+
+                  px-5
+                  py-4
+
+                  text-white
+
+                  outline-none
+
+                  transition-all
+                  duration-300
+
+                  focus:border-red-500
+                "
+              />
+            </div>
+
+            {/* PHONE */}
+
+            <div className="flex flex-col">
+              <label
+                className="
+                  mb-2
+
+                  text-[15px]
+                  font-semibold
+
+                  text-gray-300
+                "
+              >
+                Phone Number
+              </label>
+
+              <input
+                type="tel"
+                placeholder="Enter your phone number"
+                className="
+                  rounded-xl
+                  border
+                  border-white/10
+
+                  bg-black/40
+
+                  px-5
+                  py-4
+
+                  text-white
+
+                  outline-none
+
+                  transition-all
+                  duration-300
+
+                  focus:border-red-500
+                "
+              />
+            </div>
+
+            {/* SUBJECT */}
+
+            <div className="flex flex-col">
+              <label
+                className="
+                  mb-2
+
+                  text-[15px]
+                  font-semibold
+
+                  text-gray-300
+                "
+              >
+                Subject
+              </label>
+
+              <input
+                type="text"
+                placeholder="Enter subject"
+                className="
+                  rounded-xl
+                  border
+                  border-white/10
+
+                  bg-black/40
+
+                  px-5
+                  py-4
+
+                  text-white
+
+                  outline-none
+
+                  transition-all
+                  duration-300
+
+                  focus:border-red-500
+                "
+              />
+            </div>
+
+            {/* MESSAGE */}
+
+            <div className="md:col-span-2 flex flex-col">
+              <label
+                className="
+                  mb-2
+
+                  text-[15px]
+                  font-semibold
+
+                  text-gray-300
+                "
+              >
+                Message
+              </label>
+
+              <textarea
+                rows="6"
+                placeholder="Write your message..."
+                className="
+                  resize-none
+
+                  rounded-xl
+                  border
+                  border-white/10
+
+                  bg-black/40
+
+                  px-5
+                  py-4
+
+                  text-white
+
+                  outline-none
+
+                  transition-all
+                  duration-300
+
+                  focus:border-red-500
+                "
+              />
+            </div>
+
+            {/* BUTTON */}
+
+            <div className="md:col-span-2 flex justify-center">
+              <button
+                type="submit"
+                className="
+                  rounded-full
+
+                  bg-red-600
+
+                  px-10
+                  py-4
+
+                  text-[15px]
+                  font-semibold
+                  uppercase
+                  tracking-wide
+
+                  text-white
+
+                  transition-all
+                  duration-300
+
+                  hover:-translate-y-2
+                  hover:bg-red-700
+                "
+              >
+                Send Message
+              </button>
+            </div>
+          </form>
+        </div>
+
         {/* DESCRIPTION */}
 
         <div
           className="
             mx-auto
 
-            mt-14
+            mt-20
 
             max-w-[1300px]
 
@@ -299,14 +650,35 @@ export default function Contact() {
               lg:text-[28px]
             "
           >
-            We’d love to hear from you. Whether you have a question about our
+            We'd love to hear from you. Whether you have a question about our
             services, need support, or want to discuss a new project, our team
             is always ready to assist. Reach out through the contact form,
-            email, or phone, and we will respond as quickly as possible. Your
-            feedback, inquiries, and ideas are important to us, and we look
-            forward to connecting with you and building lasting relationships
-            based on trust and quality service.
+            email, or phone, and we will respond as quickly as possible.
           </p>
+        </div>
+
+        {/* MAP */}
+
+        <div
+          className="
+            mt-14
+
+            w-full
+
+            overflow-hidden
+            rounded-2xl
+          "
+        >
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.2963603480784!2d78.32860497516473!3d17.440089583436!2m3!1f0!2f0!3f0!2m3!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93dc8c5d69df%3A0x19688beb557fa0ee!2sGachibowli%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+            width="100%"
+            height="450"
+            style={{ border: 0 }}
+            allowFullScreen={true}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="w-full"
+          />
         </div>
       </section>
     </div>

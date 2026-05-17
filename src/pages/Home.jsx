@@ -14,214 +14,310 @@ import offer1 from "../assets/Offer Product/image1.png";
 import offer2 from "../assets/Offer Product/image2.png";
 import offer3 from "../assets/Offer Product/image3.png";
 
-function ProductCard({ image, large = false, alt }) {
+function MarqueeSlider({
+  items,
+  speed = 18,
+  dark = false,
+  cardSize = "square",
+}) {
+  const track = [...items, ...items, ...items];
+
+  const sizeClass =
+    cardSize === "card"
+      ? "h-[280px] w-[220px] sm:h-[320px] sm:w-[260px] md:h-[380px] md:w-[300px] lg:h-[420px] lg:w-[340px]"
+      : "h-[160px] w-[160px] sm:h-[200px] sm:w-[200px] md:h-[240px] md:w-[240px] lg:h-[280px] lg:w-[280px]";
+
   return (
-    <div
-      className={`
-        flex
-        shrink-0
-        items-center
-        justify-center
-
-        ${
-          large
-            ? "h-[320px] w-[320px] lg:h-[420px] lg:w-[420px]"
-            : "h-[240px] w-[240px] lg:h-[300px] lg:w-[300px]"
-        }
-      `}
-    >
-      <img
-        src={image}
-        alt={alt}
-        className="
-          w-full
-          h-full
-          object-contain
-
-          transition-all
-          duration-500
-          ease-in-out
-        "
+    <div className="relative w-full overflow-hidden">
+      {/* FADE LEFT */}
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 sm:w-24"
+        style={{
+          background: dark
+            ? "linear-gradient(to right, #111827, transparent)"
+            : "linear-gradient(to right, #f2f2f2, transparent)",
+        }}
       />
+
+      {/* FADE RIGHT */}
+      <div
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 sm:w-24"
+        style={{
+          background: dark
+            ? "linear-gradient(to left, #111827, transparent)"
+            : "linear-gradient(to left, #f2f2f2, transparent)",
+        }}
+      />
+
+      {/* TRACK */}
+      <div
+        className="flex w-max items-center"
+        style={{ animation: `marqueeScroll ${speed}s linear infinite` }}
+      >
+        {track.map((src, i) => (
+          <div key={i} className={`mx-4 shrink-0 ${sizeClass}`}>
+            <img
+              src={src}
+              alt={`product-${i}`}
+              className="
+                h-full
+                w-full
+                object-cover
+                transition-transform
+                duration-300
+                hover:scale-105
+              "
+            />
+          </div>
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes marqueeScroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-33.333%); }
+        }
+      `}</style>
     </div>
   );
 }
 
-function ProductSlider({ items, intervalTime = 2000, alt }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [fade, setFade] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFade(false);
-
-      setTimeout(() => {
-        setActiveIndex((prev) => (prev + 1) % items.length);
-
-        setFade(true);
-      }, 300);
-    }, intervalTime);
-
-    return () => clearInterval(interval);
-  }, [items.length, intervalTime]);
-
-  const leftImage = items[(activeIndex + 0) % items.length];
-
-  const centerImage = items[(activeIndex + 1) % items.length];
-
-  const rightImage = items[(activeIndex + 2) % items.length];
-
-  return (
-    <div
-      className="
-        mx-auto
-
-        flex
-        flex-col
-        items-center
-        justify-center
-
-        gap-10
-
-        md:flex-row
-        md:gap-8
-
-        lg:gap-14
-      "
-    >
-      {/* LEFT */}
-
-      <div
-        className={`
-          transition-opacity
-          duration-500
-          ease-in-out
-
-          ${fade ? "opacity-100" : "opacity-0"}
-        `}
-      >
-        <ProductCard image={leftImage} alt={alt} />
-      </div>
-
-      {/* CENTER */}
-
-      <div
-        className={`
-          transition-opacity
-          duration-500
-          ease-in-out
-
-          ${fade ? "opacity-100" : "opacity-0"}
-        `}
-      >
-        <ProductCard image={centerImage} alt={alt} large />
-      </div>
-
-      {/* RIGHT */}
-
-      <div
-        className={`
-          transition-opacity
-          duration-500
-          ease-in-out
-
-          ${fade ? "opacity-100" : "opacity-0"}
-        `}
-      >
-        <ProductCard image={rightImage} alt={alt} />
-      </div>
-    </div>
-  );
-}
-
-function StickySection({
+function PremiumSection({
   zIndex,
   bg,
+  smallTitle,
   title,
+  description,
   image,
-  imageClass,
-  buttonDark = false,
+  dark = true,
+  reverse = false,
 }) {
   return (
     <section
       className={`
-        sticky top-0 ${zIndex}
+        sticky
+        top-0
+        ${zIndex}
 
-        flex h-screen w-full
-        flex-col items-center justify-center
+        flex
+        min-h-screen
+        w-full
+        items-center
+        justify-center
 
         overflow-hidden
 
         ${bg}
 
-        px-5 py-[80px]
+        px-6
+        py-20
       `}
     >
-      <h2
-        className={`
-          mb-10
+      {/* GLOW */}
 
-          px-5
+      <div
+        className="
+          absolute
+          left-1/2
+          top-1/2
 
-          text-center
+          h-[500px]
+          w-[500px]
 
-          font-['Oswald']
-          text-[28px]
-          font-medium
-          uppercase
-          leading-tight
-
-          md:text-[38px]
-          lg:text-[54px]
-
-          ${buttonDark ? "text-black" : "text-white"}
-        `}
-      >
-        {title}
-      </h2>
-
-      <img src={image} alt={title} className={imageClass} />
-
-      <button
-        className={`
-          mt-10
+          -translate-x-1/2
+          -translate-y-1/2
 
           rounded-full
-          border-2
 
-          px-[26px]
-          py-[10px]
+          bg-white/5
 
-          text-[16px]
+          blur-3xl
+        "
+      />
 
-          transition-all
-          duration-300
+      {/* CONTENT */}
 
-          sm:px-[42px]
-          sm:py-[14px]
-          sm:text-[22px]
+      <div
+        className={`
+          relative
+          z-10
 
-          ${
-            buttonDark
-              ? `
-                border-black
-                text-black
+          mx-auto
 
-                hover:bg-black
-                hover:text-white
-              `
-              : `
-                border-white
-                text-white
+          flex
+          max-w-[1400px]
+          flex-col
+          items-center
+          justify-between
 
-                hover:bg-white
-                hover:text-black
-              `
-          }
+          gap-16
+
+          lg:flex-row
+
+          ${reverse ? "lg:flex-row-reverse" : "lg:flex-row"}
         `}
       >
-        Discover More
-      </button>
+        {/* TEXT */}
+
+        <div
+          className="
+            flex
+            max-w-[620px]
+            flex-col
+            items-start
+
+            text-left
+          "
+        >
+          <p
+            className="
+              mb-4
+
+              text-[14px]
+              font-medium
+              uppercase
+              tracking-[4px]
+
+              text-red-500
+            "
+          >
+            {smallTitle}
+          </p>
+
+          <h1
+            className={`
+              font-['Oswald']
+
+              text-[42px]
+              font-semibold
+              uppercase
+              leading-[1.05]
+
+              md:text-[58px]
+
+              lg:text-[76px]
+
+              ${dark ? "text-white" : "text-black"}
+            `}
+          >
+            {title}
+          </h1>
+
+          <p
+            className={`
+              mt-8
+              max-w-[520px]
+
+              text-[16px]
+              leading-[1.8]
+
+              md:text-[18px]
+
+              ${dark ? "text-gray-300" : "text-gray-700"}
+            `}
+          >
+            {description}
+          </p>
+
+          {/* BUTTON */}
+
+          <button
+            className={`
+              mt-10
+
+              rounded-full
+              border
+
+              px-8
+              py-4
+
+              text-[16px]
+              font-medium
+              uppercase
+              tracking-wide
+
+              transition-all
+              duration-300
+
+              hover:-translate-y-[3px]
+
+              ${
+                dark
+                  ? `
+                    border-white
+                    text-white
+
+                    hover:bg-white
+                    hover:text-black
+                  `
+                  : `
+                    border-black
+                    text-black
+
+                    hover:bg-black
+                    hover:text-white
+                  `
+              }
+            `}
+          >
+            Discover More
+          </button>
+        </div>
+
+        {/* IMAGE */}
+
+        <div
+          className="
+            relative
+
+            flex
+            items-center
+            justify-center
+          "
+        >
+          {/* IMAGE GLOW */}
+
+          <div
+            className="
+              absolute
+
+              h-[420px]
+              w-[420px]
+
+              rounded-full
+
+              bg-white/10
+
+              blur-3xl
+            "
+          />
+
+          <img
+            src={image}
+            alt={title}
+            className="
+              relative
+              z-10
+
+              w-[280px]
+
+              object-contain
+
+              drop-shadow-[0_25px_45px_rgba(255,255,255,0.18)]
+
+              transition-all
+              duration-500
+
+              hover:-translate-y-2
+              hover:scale-[1.02]
+
+              sm:w-[420px]
+
+              lg:w-[620px]
+            "
+          />
+        </div>
+      </div>
     </section>
   );
 }
@@ -233,10 +329,16 @@ export default function Home() {
 
       <section
         className="
-          sticky top-0 z-[1]
+          sticky
+          top-0
+          z-[1]
 
-          flex h-screen w-full
-          flex-col items-center justify-center
+          flex
+          h-screen
+          w-full
+          flex-col
+          items-center
+          justify-center
 
           overflow-hidden
 
@@ -280,207 +382,118 @@ export default function Home() {
             absolute
             bottom-[30px]
 
-            rotate-90
-
-            text-[28px]
-            text-[#777]
-
             animate-bounce
 
-            lg:text-[42px]
+            flex
+            flex-col
+            items-center
+
+            text-[#777]
           "
         >
-          ❯❯
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="36"
+            height="36"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="opacity-40"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="36"
+            height="36"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="-mt-3"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </div>
       </section>
 
-      {/* SWITCH */}
-
-      <StickySection
+      {/* SWITCH — text left, image right */}
+      <PremiumSection
         zIndex="z-[2]"
         bg="bg-black"
+        smallTitle="Premium Modular Collection"
         title="ELEVATING SPACES, ONE SWITCH AT A TIME"
+        description="Discover premium electrical solutions crafted for modern interiors, combining elegant aesthetics with long-lasting performance."
         image={switchImg}
-        imageClass="
-          w-[260px]
-          max-w-full
-
-          object-contain
-
-          sm:w-[380px]
-
-          lg:w-[520px]
-        "
+        reverse={false}
       />
 
-      {/* DINING */}
-
-      <StickySection
+      {/* DINING — image left, text right */}
+      <PremiumSection
         zIndex="z-[3]"
         bg="bg-[#e8e3dc]"
+        smallTitle="Luxury Lighting Solutions"
         title="CRAFTED TO GLOW BEAUTIFULLY"
+        description="Elegant lighting collections designed to transform modern interiors with warmth, sophistication, and timeless style."
         image={diningImg}
-        imageClass="
-          w-[300px]
-          max-w-full
-
-          object-contain
-
-          md:w-[480px]
-
-          lg:w-[700px]
-        "
-        buttonDark
+        dark={false}
+        reverse={true}
       />
 
-      {/* PIPES */}
-
-      <StickySection
+      {/* PIPES — text left, image right */}
+      <PremiumSection
         zIndex="z-[4]"
         bg="bg-[radial-gradient(circle,#2d3440,#111827)]"
+        smallTitle="Industrial Pipe Systems"
         title="RELIABLE FLOW, LASTING STRENGTH"
+        description="Engineered piping solutions delivering durability, reliability, and consistent performance across residential and industrial projects."
         image={pipesImg}
-        imageClass="
-          w-[260px]
-          max-w-full
-
-          object-contain
-
-          md:w-[340px]
-
-          lg:w-[650px]
-        "
+        reverse={false}
       />
 
-      {/* WIRES */}
+      {/* WIRES — image left, text right */}
+      <PremiumSection
+        zIndex="z-[5]"
+        bg="bg-[#b3aaa2]"
+        smallTitle="Premium Wiring Technology"
+        title="SMART CONNECTIONS FOR MODERN INFRASTRUCTURE"
+        description="High-performance electrical wires designed for maximum safety, efficiency, and long-term reliability."
+        image={wireImg}
+        dark={false}
+        reverse={true}
+      />
 
-      <section
-        className="
-    sticky top-0 z-[5]
-
-    flex h-screen w-full
-    items-center justify-center
-
-    overflow-hidden
-
-    bg-[#b3aaa2]
-  "
-      >
-        {/* HEADING */}
-
-        <h2
-          className="
-      absolute
-      top-6
-      left-1/2
-      z-20
-
-      w-full
-
-      -translate-x-1/2
-
-      px-4
-
-      text-center
-
-      font-['Oswald']
-      text-[18px]
-      font-semibold
-      uppercase
-      leading-tight
-
-      text-black
-
-      sm:text-[24px]
-
-      md:text-[34px]
-
-      lg:text-[46px]
-    "
-        >
-          RELIABLE PROTECTION FOR CRITICAL SYSTEMS
-        </h2>
-
-        {/* IMAGE */}
-
-        <img
-          src={wireImg}
-          alt="Wires"
-          className="
-      relative
-
-      -left-[4%]
-
-      w-[68%]
-      max-w-[1300px]
-
-      object-contain
-    "
-        />
-
-        {/* BUTTON */}
-
-        <button
-          className="
-      absolute
-      bottom-[7%]
-      left-1/2
-      z-20
-
-      -translate-x-1/2
-
-      rounded-full
-      border-2 border-black
-
-      px-6
-      py-2
-
-      text-[14px]
-      font-medium
-      text-black
-
-      transition-all
-      duration-300
-
-      hover:bg-black
-      hover:text-white
-
-      md:px-8
-      md:py-3
-      md:text-[18px]
-    "
-        >
-          Discover More
-        </button>
-      </section>
-
-      {/* PROTECTION */}
-
-      <StickySection
+      {/* PROTECTION — text left, image right */}
+      <PremiumSection
         zIndex="z-[6]"
         bg="bg-[radial-gradient(circle,#3f8745,#0b3d0f)]"
-        title="RELIABLE PROTECTION FOR CRITICAL SYSTEMS"
+        smallTitle="Advanced Protection Systems"
+        title="ADVANCED SAFETY FOR MODERN INFRASTRUCTURE"
+        description="Reliable circuit protection systems built to safeguard critical electrical networks with uncompromising safety."
         image={protectionImg}
-        imageClass="
-          w-[320px]
-          max-w-full
-
-          object-contain
-
-          md:w-[460px]
-
-          lg:w-[700px]
-        "
+        reverse={false}
       />
 
       {/* TRENDING PRODUCTS */}
 
       <section
         className="
-          sticky top-0 z-[7]
+          sticky
+          top-0
+          z-[7]
 
-          flex h-screen w-full
-          flex-col items-center justify-center
+          flex
+          h-screen
+          w-full
+          flex-col
+          items-center
+          justify-center
 
           overflow-hidden
 
@@ -511,10 +524,11 @@ export default function Home() {
           Trending Products
         </h2>
 
-        <ProductSlider
+        <MarqueeSlider
           items={[image1, image2, image3]}
-          intervalTime={2500}
-          alt="Trending Product"
+          speed={18}
+          dark={false}
+          cardSize="square"
         />
       </section>
 
@@ -522,10 +536,16 @@ export default function Home() {
 
       <section
         className="
-          sticky top-0 z-[8]
+          sticky
+          top-0
+          z-[8]
 
-          flex h-screen w-full
-          flex-col items-center justify-center
+          flex
+          h-screen
+          w-full
+          flex-col
+          items-center
+          justify-center
 
           overflow-hidden
 
@@ -556,10 +576,11 @@ export default function Home() {
           Offer Product
         </h2>
 
-        <ProductSlider
+        <MarqueeSlider
           items={[offer1, offer2, offer3]}
-          intervalTime={2600}
-          alt="Offer Product"
+          speed={20}
+          dark={true}
+          cardSize="card"
         />
       </section>
 
@@ -567,44 +588,51 @@ export default function Home() {
 
       <section
         className="
-    sticky top-0 z-[9]
+          sticky
+          top-0
+          z-[9]
 
-    flex h-screen w-full
-    flex-col items-center justify-center
+          flex
+          h-screen
+          w-full
+          flex-col
+          items-center
+          justify-center
 
-    overflow-hidden
+          overflow-hidden
 
-    bg-[#f7f7f7]
+          bg-[#f7f7f7]
 
-    px-6
-    py-24
-  "
+          px-6
+          py-24
+        "
       >
         <h2
           className="
-      mb-20
+            mb-20
 
-      text-center
+            text-center
 
-      font-['Oswald']
-      text-[34px]
-      font-semibold
-      uppercase
+            font-['Oswald']
+            text-[34px]
+            font-semibold
+            uppercase
 
-      text-black
+            text-black
 
-      md:text-[44px]
+            md:text-[44px]
 
-      lg:text-[52px]
-    "
+            lg:text-[52px]
+          "
         >
           Recommendations
         </h2>
 
-        <ProductSlider
+        <MarqueeSlider
           items={[image1, image2, image3]}
-          intervalTime={2400}
-          alt="Recommended Product"
+          speed={16}
+          dark={false}
+          cardSize="square"
         />
       </section>
     </>

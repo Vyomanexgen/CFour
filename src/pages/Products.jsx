@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 import heroImg from "../assets/products/hero.png";
 import allProductsTop from "../assets/products/allProducts-top.png";
@@ -34,7 +35,10 @@ import image13 from "../assets/products/image13.png";
 import image14 from "../assets/products/image14.png";
 
 export default function Products({ addToCart }) {
-  const [selectedCategory, setSelectedCategory] = useState("products");
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const selectedCategory = params.get("category") || "products";
+
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeTab, setActiveTab] = useState("Specifications");
@@ -44,6 +48,36 @@ export default function Products({ addToCart }) {
   const lightsRef = useRef(null);
   const allProductsRef = useRef(null);
   const detailRef = useRef(null);
+
+  /* RESET & SCROLL WHEN CATEGORY CHANGES */
+
+  useEffect(() => {
+    setSelectedProduct(null);
+    setCurrentPage(1);
+
+    const timer = setTimeout(() => {
+      if (selectedCategory === "pipes") {
+        pipesRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      } else if (selectedCategory === "lights") {
+        lightsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      } else if (selectedCategory === "all") {
+        allProductsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [selectedCategory]);
 
   /* PIPES */
 
@@ -188,122 +222,18 @@ export default function Products({ addToCart }) {
 
   return (
     <>
-      {/* SEARCH BAR */}
-
-      <section className="w-full bg-[#f5f5f5] pt-24 pb-6 px-6">
-        <div
-          className="
-          max-w-5xl
-          mx-auto
-          flex
-          items-center
-          bg-white
-          rounded-full
-          overflow-hidden
-          shadow-lg
-          border
-          border-gray-200
-          "
-        >
-          {/* CATEGORY */}
-
-          <select
-            value={selectedCategory}
-            onChange={(e) => {
-              const value = e.target.value;
-
-              setSelectedCategory(value);
-              setCurrentPage(1);
-              setSelectedProduct(null);
-
-              setTimeout(() => {
-                if (value === "pipes") {
-                  pipesRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-                }
-
-                if (value === "lights") {
-                  lightsRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-                }
-
-                if (value === "all") {
-                  allProductsRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  });
-                }
-              }, 100);
-            }}
-            className="
-            px-6
-            py-4
-            text-lg
-            font-medium
-            bg-transparent
-            outline-none
-            border-r
-            border-gray-200
-            text-gray-700
-            min-w-[180px]
-            "
-          >
-            <option value="products">Products</option>
-            <option value="pipes">Pipes</option>
-            <option value="lights">Lights</option>
-            <option value="all">All Products</option>
-          </select>
-
-          {/* INPUT */}
-
-          <input
-            type="text"
-            placeholder="Search products here..."
-            className="
-            flex-1
-            px-6
-            py-4
-            text-lg
-            outline-none
-            text-gray-700
-            placeholder:text-gray-400
-            "
-          />
-
-          {/* BUTTON */}
-
-          <button
-            className="
-            bg-black
-            text-white
-            px-8
-            py-4
-            text-xl
-            hover:bg-gray-800
-            transition
-            "
-          >
-            🔍
-          </button>
-        </div>
-      </section>
-
       {/* HERO IMAGE */}
 
       {selectedCategory !== "all" && (
-        <section className="w-full bg-black overflow-hidden">
+        <section className="w-full bg-black overflow-hidden pt-[85px]">
           <img
             src={heroImg}
             alt="Products Hero"
             className="
-            w-full
-            object-cover
-            object-top
-            "
+      w-full
+      object-cover
+      object-top
+      "
           />
         </section>
       )}
@@ -667,7 +597,8 @@ export default function Products({ addToCart }) {
                       </span>
 
                       <div className="flex flex-col gap-2">
-                        {/* ✅ DETAIL VIEW - ADD TO CART */}
+                        {/* DETAIL VIEW - ADD TO CART */}
+
                         <button
                           onClick={() => addToCart(selectedProduct)}
                           className="
@@ -1364,7 +1295,8 @@ export default function Products({ addToCart }) {
                               Add to Quote
                             </button>
 
-                            {/* ✅ GRID - ADD TO CART */}
+                            {/* GRID - ADD TO CART */}
+
                             <button
                               onClick={() => addToCart(item)}
                               className="
