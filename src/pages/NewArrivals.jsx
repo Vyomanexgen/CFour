@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import rightPanel from "../assets/newArrivals/right-img.png";
 
 import product1 from "../assets/newArrivals/product1.png";
@@ -5,6 +7,10 @@ import product2 from "../assets/newArrivals/product2.png";
 import product3 from "../assets/newArrivals/product3.png";
 
 export default function NewArrivals() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   const products = [
     {
       id: 1,

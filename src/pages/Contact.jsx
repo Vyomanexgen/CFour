@@ -1,8 +1,13 @@
+import { useEffect } from "react";
 import { RiMapPinFill, RiPhoneFill, RiMailFill } from "@remixicon/react";
 
 import topImg from "../assets/contactUs/top.png";
 
 export default function Contact() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   return (
     <div
       className="

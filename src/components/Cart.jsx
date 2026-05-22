@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Cart({ cartItems, setCartItems }) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
   const navigate = useNavigate();
 
   const [showCheckout, setShowCheckout] = useState(false);
@@ -12,7 +15,7 @@ export default function Cart({ cartItems, setCartItems }) {
   const [showFinalOrderDetails, setShowFinalOrderDetails] = useState(false);
   const [showCancelPage, setShowCancelPage] = useState(false);
   const [cancelItem, setCancelItem] = useState(null);
-  const [showCancellationSuccess, setShowCancellationSuccess] = useState(false); // ← NEW
+  const [showCancellationSuccess, setShowCancellationSuccess] = useState(false);
 
   const updateQty = (title, delta) => {
     setCartItems((prev) =>

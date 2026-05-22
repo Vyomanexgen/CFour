@@ -1,18 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import logo from "../assets/logo.png";
 
 export default function LoginRegister() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
   const [isRegister, setIsRegister] = useState(false);
-
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-
   const [email, setEmail] = useState("");
-
   const [name, setName] = useState("");
-
   const [password, setPassword] = useState("");
-
   const [confirmPassword, setConfirmPassword] = useState("");
 
   return (

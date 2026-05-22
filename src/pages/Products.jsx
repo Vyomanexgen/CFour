@@ -43,6 +43,7 @@ export default function Products({ addToCart }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeTab, setActiveTab] = useState("Specifications");
   const [selectedColor, setSelectedColor] = useState("green");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const pipesRef = useRef(null);
   const lightsRef = useRef(null);
@@ -493,7 +494,7 @@ export default function Products({ addToCart }) {
 
                 {/* DETAIL CONTENT */}
 
-                <div className="flex gap-10">
+                <div className="flex flex-col gap-10 lg:flex-row">
                   {/* LEFT - THUMBNAILS + MAIN IMAGE */}
 
                   <div className="flex gap-4">
@@ -520,8 +521,10 @@ export default function Products({ addToCart }) {
 
                     <div
                       className="
-                      w-[340px]
-                      h-[340px]
+                      w-full
+                      max-w-[340px]
+                      h-[280px]
+                      sm:h-[340px]
                       bg-gray-200
                       rounded-md
                       border
@@ -588,7 +591,7 @@ export default function Products({ addToCart }) {
 
                     {/* PRICE + BUTTONS */}
 
-                    <div className="flex items-center gap-6 mb-6">
+                    <div className="flex flex-wrap items-center gap-6 mb-6">
                       <span className="text-2xl font-bold">
                         ₹67.00
                         <span className="text-sm font-normal text-gray-500">
@@ -673,8 +676,8 @@ export default function Products({ addToCart }) {
 
                     {/* TABS */}
 
-                    <div className="border-b border-gray-300 mb-4">
-                      <div className="flex gap-6">
+                    <div className="border-b border-gray-300 mb-4 overflow-x-auto no-scrollbar">
+                      <div className="flex gap-4 min-w-max">
                         {[
                           "Specifications",
                           "Datasheets",
@@ -690,6 +693,7 @@ export default function Products({ addToCart }) {
                             font-medium
                             border-b-2
                             transition
+                            whitespace-nowrap
                             ${
                               activeTab === tab
                                 ? "border-red-500 text-red-500"
@@ -936,18 +940,49 @@ export default function Products({ addToCart }) {
 
               {/* PRODUCTS */}
 
-              <div className="max-w-7xl mx-auto flex gap-6 px-6">
+              <div className="max-w-7xl mx-auto flex flex-col gap-6 px-6 lg:flex-row">
+
+                {/* MOBILE FILTER TOGGLE */}
+
+                <div className="lg:hidden">
+                  <button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="
+                    flex
+                    items-center
+                    gap-2
+                    bg-white
+                    border
+                    border-gray-300
+                    px-4
+                    py-2
+                    rounded-md
+                    shadow-sm
+                    text-sm
+                    font-semibold
+                    w-full
+                    justify-between
+                    "
+                  >
+                    <span>Filters & Categories</span>
+                    <span>{sidebarOpen ? "▲" : "▼"}</span>
+                  </button>
+                </div>
+
                 {/* SIDEBAR */}
 
                 <div
-                  className="
-                  w-[260px]
+                  className={`
+                  w-full
+                  lg:w-[260px]
                   bg-white
                   p-5
                   rounded-md
                   shadow-md
                   h-fit
-                  "
+                  lg:block
+                  ${sidebarOpen ? "block" : "hidden"}
+                  `}
                 >
                   <h2 className="text-xl font-bold mb-5">
                     Product Catalog & Filters
