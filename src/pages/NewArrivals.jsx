@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
-import rightPanel from "../assets/newArrivals/right-img.png";
+import rightPanel from "../assets/newArrivals/right-img.webp";
 
-import product1 from "../assets/newArrivals/product1.png";
-import product2 from "../assets/newArrivals/product2.png";
-import product3 from "../assets/newArrivals/product3.png";
+import product1 from "../assets/newArrivals/product1.webp";
+import product2 from "../assets/newArrivals/product2.webp";
+import product3 from "../assets/newArrivals/product3.webp";
 
 export default function NewArrivals() {
   useEffect(() => {

@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 
-import switchImg from "../assets/switch.png";
-import diningImg from "../assets/dining.png";
-import pipesImg from "../assets/pipes.png";
-import wireImg from "../assets/wires.png";
-import protectionImg from "../assets/protection.png";
+import switchImg from "../assets/switch.webp";
+import diningImg from "../assets/dining.webp";
+import pipesImg from "../assets/pipes.webp";
+import wireImg from "../assets/wires.webp";
+import protectionImg from "../assets/protection.webp";
 
-import image1 from "../assets/trending-products/image1.png";
-import image2 from "../assets/trending-products/image2.png";
-import image3 from "../assets/trending-products/image3.png";
+import image1 from "../assets/trending-products/image1.webp";
+import image2 from "../assets/trending-products/image2.webp";
+import image3 from "../assets/trending-products/image3.webp";
 
-import offer1 from "../assets/Offer Product/image1.png";
-import offer2 from "../assets/Offer Product/image2.png";
-import offer3 from "../assets/Offer Product/image3.png";
+import offer1 from "../assets/Offer Product/image1.webp";
+import offer2 from "../assets/Offer Product/image2.webp";
+import offer3 from "../assets/Offer Product/image3.webp";
 
 function MarqueeSlider({
   items,

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
-import topImg from "../assets/aboutus/top.png";
+import topImg from "../assets/aboutus/top.webp";
 
-import leftImg from "../assets/aboutus/left-image.png";
+import leftImg from "../assets/aboutus/left-image.webp";
 
-import rightImg1 from "../assets/aboutus/right-image1.png";
-import rightImg2 from "../assets/aboutus/right-image2.png";
-import rightImg3 from "../assets/aboutus/right-image3.png";
+import rightImg1 from "../assets/aboutus/right-image1.webp";
+import rightImg2 from "../assets/aboutus/right-image2.webp";
+import rightImg3 from "../assets/aboutus/right-image3.webp";
 
 function Counter({ end, suffix = "", duration = 2000, startAnimation }) {
   const [count, setCount] = useState(0);

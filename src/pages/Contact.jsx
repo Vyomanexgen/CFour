@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { RiMapPinFill, RiPhoneFill, RiMailFill } from "@remixicon/react";
 
-import topImg from "../assets/contactUs/top.png";
+import topImg from "../assets/contactUs/top.webp";
 
 export default function Contact() {
   useEffect(() => {

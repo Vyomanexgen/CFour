@@ -4,7 +4,7 @@ import { ShoppingCart, User, Menu, X, Search } from "lucide-react";
 
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.webp";
 
 export default function Navbar({ cartCount = 0 }) {
   const [mobileOpen, setMobileOpen] = useState(false);

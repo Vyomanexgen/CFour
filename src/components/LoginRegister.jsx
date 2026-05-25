@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.webp";
 
 export default function LoginRegister() {
   useEffect(() => {

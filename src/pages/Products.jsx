@@ -1,38 +1,38 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-import heroImg from "../assets/products/hero.png";
-import allProductsTop from "../assets/products/allProducts-top.png";
+import heroImg from "../assets/products/hero.webp";
+import allProductsTop from "../assets/products/allProducts-top.webp";
 
 /* PIPES */
-import PvcPipes from "../assets/products/PvcPipes.png";
-import CpvcPipes from "../assets/products/CpvcPipes.png";
-import UpvcPipes from "../assets/products/UpvcPipes.png";
-import HdpePipes from "../assets/products/HdpePipes.png";
-import PipeFittings from "../assets/products/PipeFittings.png";
+import PvcPipes from "../assets/products/PvcPipes.webp";
+import CpvcPipes from "../assets/products/CpvcPipes.webp";
+import UpvcPipes from "../assets/products/UpvcPipes.webp";
+import HdpePipes from "../assets/products/HdpePipes.webp";
+import PipeFittings from "../assets/products/PipeFittings.webp";
 
 /* LIGHTS */
-import CeilingLights from "../assets/products/CeilingLights.png";
-import CeilingLights1 from "../assets/products/CeilingLights1.png";
-import LedBulb from "../assets/products/LedBulb.png";
-import LedLights from "../assets/products/LedLights.png";
-import BedLights from "../assets/products/BedLights.png";
+import CeilingLights from "../assets/products/CeilingLights.webp";
+import CeilingLights1 from "../assets/products/CeilingLights1.webp";
+import LedBulb from "../assets/products/LedBulb.webp";
+import LedLights from "../assets/products/LedLights.webp";
+import BedLights from "../assets/products/BedLights.webp";
 
 /* ALL PRODUCTS */
-import image1 from "../assets/products/image1.png";
-import image2 from "../assets/products/image2.png";
-import image3 from "../assets/products/image3.png";
-import image4 from "../assets/products/image4.png";
-import image5 from "../assets/products/image5.png";
-import image6 from "../assets/products/image6.png";
-import image7 from "../assets/products/image7.png";
-import image8 from "../assets/products/image8.png";
-import image9 from "../assets/products/image9.png";
-import image10 from "../assets/products/image10.png";
-import image11 from "../assets/products/image11.png";
-import image12 from "../assets/products/image12.png";
-import image13 from "../assets/products/image13.png";
-import image14 from "../assets/products/image14.png";
+import image1 from "../assets/products/image1.webp";
+import image2 from "../assets/products/image2.webp";
+import image3 from "../assets/products/image3.webp";
+import image4 from "../assets/products/image4.webp";
+import image5 from "../assets/products/image5.webp";
+import image6 from "../assets/products/image6.webp";
+import image7 from "../assets/products/image7.webp";
+import image8 from "../assets/products/image8.webp";
+import image9 from "../assets/products/image9.webp";
+import image10 from "../assets/products/image10.webp";
+import image11 from "../assets/products/image11.webp";
+import image12 from "../assets/products/image12.webp";
+import image13 from "../assets/products/image13.webp";
+import image14 from "../assets/products/image14.webp";
 
 export default function Products({ addToCart }) {
   const location = useLocation();

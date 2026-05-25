@@ -9,7 +9,7 @@ import {
   RiTimeLine,
 } from "@remixicon/react";
 
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.webp";
 
 export default function Footer() {
   return (
