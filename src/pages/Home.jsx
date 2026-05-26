@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import switchImg from "../assets/switch.webp";
 import diningImg from "../assets/dining.webp";
@@ -91,7 +92,16 @@ function PremiumSection({
   image,
   dark = true,
   reverse = false,
+  productKey,
 }) {
+  const navigate = useNavigate();
+
+  const handleDiscover = () => {
+    if (productKey) {
+      navigate(`/products?category=${productKey}`);
+    }
+  };
+
   return (
     <section
       className={`
@@ -222,6 +232,7 @@ function PremiumSection({
           {/* BUTTON */}
 
           <button
+            onClick={handleDiscover}
             className={`
               mt-10
 
@@ -432,6 +443,7 @@ export default function Home() {
         description="Discover premium electrical solutions crafted for modern interiors, combining elegant aesthetics with long-lasting performance."
         image={switchImg}
         reverse={false}
+        productKey="switch"
       />
 
       {/* DINING — image left, text right */}
@@ -444,6 +456,7 @@ export default function Home() {
         image={diningImg}
         dark={false}
         reverse={true}
+        productKey="lights"
       />
 
       {/* PIPES — text left, image right */}
@@ -455,6 +468,7 @@ export default function Home() {
         description="Engineered piping solutions delivering durability, reliability, and consistent performance across residential and industrial projects."
         image={pipesImg}
         reverse={false}
+        productKey="pipes"
       />
 
       {/* WIRES — image left, text right */}
@@ -467,6 +481,7 @@ export default function Home() {
         image={wireImg}
         dark={false}
         reverse={true}
+        productKey="wires"
       />
 
       {/* PROTECTION — text left, image right */}
@@ -478,6 +493,7 @@ export default function Home() {
         description="Reliable circuit protection systems built to safeguard critical electrical networks with uncompromising safety."
         image={protectionImg}
         reverse={false}
+        productKey="protection"
       />
 
       {/* TRENDING PRODUCTS */}
