@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import switchImg from "../assets/switch.webp";
+import spikeImg from "../assets/spike.webp";
 import diningImg from "../assets/dining.webp";
 import pipesImg from "../assets/pipes.webp";
-import wireImg from "../assets/wires.webp";
+import pipeImg from "../assets/pipe.webp";
 import protectionImg from "../assets/protection.webp";
 
 import image1 from "../assets/trending-products/image1.webp";
@@ -438,21 +439,21 @@ export default function Home() {
       <PremiumSection
         zIndex="z-[2]"
         bg="bg-black"
-        smallTitle="Premium Modular Collection"
-        title="ELEVATING SPACES, ONE SWITCH AT A TIME"
-        description="Discover premium electrical solutions crafted for modern interiors, combining elegant aesthetics with long-lasting performance."
-        image={switchImg}
+        smallTitle="PREMIUM SURFACE BOX COLLECTION"
+        title="MODULAR DESIGN FOR MODERN INSTALLATIONS"
+        description="Durable CFOUR Surface Boxes crafted for clean installations, flexible module configurations, and seamless modern electrical setups."
+        image={spikeImg}
         reverse={false}
         productKey="switch"
       />
 
-      {/* DINING — image left, text right */}
+      {/* LIGHTS — image left, text right */}
       <PremiumSection
         zIndex="z-[3]"
-        bg="bg-[#e8e3dc]"
-        smallTitle="Luxury Lighting Solutions"
-        title="CRAFTED TO GLOW BEAUTIFULLY"
-        description="Elegant lighting collections designed to transform modern interiors with warmth, sophistication, and timeless style."
+        bg="bg-[#b3aaa2]"
+        smallTitle="Premium Lighting Collection"
+        title="MODERN LIGHTING FOR ELEGANT SPACES"
+        description="Premium ceiling lights and decorative lighting solutions crafted to elevate interiors with modern style and efficient illumination."
         image={diningImg}
         dark={false}
         reverse={true}
@@ -474,11 +475,11 @@ export default function Home() {
       {/* WIRES — image left, text right */}
       <PremiumSection
         zIndex="z-[5]"
-        bg="bg-[#b3aaa2]"
-        smallTitle="Premium Wiring Technology"
-        title="SMART CONNECTIONS FOR MODERN INFRASTRUCTURE"
-        description="High-performance electrical wires designed for maximum safety, efficiency, and long-term reliability."
-        image={wireImg}
+        bg="bg-[#d8cec5]"
+        smallTitle="ADVANCED PIPE SOLUTIONS"
+        title="RELIABLE FLOW FOR MODERN PLUMBING"
+        description="Durable West Pipes designed for efficient water flow, superior strength, and dependable performance across residential and commercial projects."
+        image={pipeImg}
         dark={false}
         reverse={true}
         productKey="wires"
