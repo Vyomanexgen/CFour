@@ -106,6 +106,7 @@ function PremiumSection({
   return (
     <section
       className={`
+        relative
         sticky
         top-0
         ${zIndex}
@@ -128,6 +129,7 @@ function PremiumSection({
 
       <div
         className="
+        pointer-events-none
           absolute
           left-1/2
           top-1/2
@@ -291,6 +293,7 @@ function PremiumSection({
 
           <div
             className="
+             pointer-events-none
               absolute
 
               h-[420px]
@@ -472,7 +475,7 @@ export default function Home() {
         productKey="pipes"
       />
 
-      {/* WIRES — image left, text right */}
+      {/* PLUMBING — image left, text right */}
       <PremiumSection
         zIndex="z-[5]"
         bg="bg-[#d8cec5]"
@@ -482,7 +485,7 @@ export default function Home() {
         image={pipeImg}
         dark={false}
         reverse={true}
-        productKey="wires"
+        productKey="plumbing"
       />
 
       {/* PROTECTION — text left, image right */}
