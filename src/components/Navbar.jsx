@@ -463,31 +463,31 @@ export default function Navbar({ cartCount = 0 }) {
             <button
               onClick={() => navigate("/cart")}
               className="
-group
-relative
-inline-flex
-items-center
-gap-2
-rounded-full
-bg-transparent
-px-[18px]
-py-[10px]
-text-[14px]
-font-medium
-text-[#111]
-transition-all
-duration-300
-hover:-translate-y-[2px]
-hover:bg-gray-100
-"
+              group
+              relative
+              inline-flex
+              items-center
+              gap-2
+              rounded-full
+              bg-transparent
+              px-[18px]
+              py-[10px]
+              text-[14px]
+              font-medium
+              text-[#111]
+              transition-all
+              duration-300
+              hover:-translate-y-[2px]
+              hover:bg-gray-100
+              "
             >
               <ShoppingCart
                 size={20}
                 className="
-  transition-all
-  duration-300
-  group-hover:-rotate-12
-"
+                transition-all
+                duration-300
+                group-hover:-rotate-12
+                "
               />
 
               <span className="font-medium">Cart</span>
@@ -522,21 +522,21 @@ hover:bg-gray-100
             <button
               onClick={() => navigate("/login")}
               className="
-inline-flex
-items-center
-gap-2
-rounded-full
-bg-[#111]
-px-5
-py-[10px]
-text-[14px]
-font-medium
-text-white
-transition-all
-duration-300
-hover:-translate-y-[2px]
-hover:bg-black
-"
+              inline-flex
+              items-center
+              gap-2
+              rounded-full
+              bg-[#111]
+              px-5
+              py-[10px]
+              text-[14px]
+              font-medium
+              text-white
+              transition-all
+              duration-300
+              hover:-translate-y-[2px]
+              hover:bg-black
+              "
             >
               <User size={16} />
 

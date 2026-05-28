@@ -237,6 +237,7 @@ function PremiumSection({
           <button
             onClick={handleDiscover}
             className={`
+              cursor-pointer
               mt-10
 
               rounded-full

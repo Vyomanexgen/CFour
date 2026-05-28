@@ -46,15 +46,10 @@ function Layout({ cartItems, setCartItems, addToCart }) {
       >
         <Routes>
           <Route path="/" element={<Home />} />
-
           <Route path="/about" element={<About />} />
-
           <Route path="/products" element={<Products addToCart={addToCart} />} />
-
           <Route path="/new-arrivals" element={<NewArrivals />} />
-
           <Route path="/contact" element={<Contact />} />
-
           <Route path="/login" element={<LoginRegister />} />
 
           <Route

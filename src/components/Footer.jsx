@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   RiInstagramLine,
   RiLinkedinBoxFill,
@@ -150,15 +151,50 @@ export default function Footer() {
               text-black
             "
           >
-            <li>Home</li>
+            <li>
+              <Link
+                to="/"
+                className="cursor-pointer hover:text-red-600 transition"
+              >
+                Home
+              </Link>
+            </li>
 
-            <li>Products</li>
+            <li>
+              <Link
+                to="/products"
+                className="cursor-pointer hover:text-red-600 transition"
+              >
+                Products
+              </Link>
+            </li>
 
-            <li>About Us</li>
+            <li>
+              <Link
+                to="/about"
+                className="cursor-pointer hover:text-red-600 transition"
+              >
+                About Us
+              </Link>
+            </li>
 
-            <li>New Arrivals</li>
+            <li>
+              <Link
+                to="/new-arrivals"
+                className="cursor-pointer hover:text-red-600 transition"
+              >
+                New Arrivals
+              </Link>
+            </li>
 
-            <li>Contact Us</li>
+            <li>
+              <Link
+                to="/contact"
+                className="cursor-pointer hover:text-red-600 transition"
+              >
+                Contact Us
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -187,11 +223,32 @@ export default function Footer() {
               text-black
             "
           >
-            <li>Pipes</li>
+            <li>
+              <Link
+                to="/products?category=pipes"
+                className="cursor-pointer hover:text-red-600 transition"
+              >
+                Pipes
+              </Link>
+            </li>
 
-            <li>Lights</li>
+            <li>
+              <Link
+                to="/products?category=lights"
+                className="cursor-pointer hover:text-red-600 transition"
+              >
+                Lights
+              </Link>
+            </li>
 
-            <li>Switches</li>
+            <li>
+              <Link
+                to="/products?category=switch"
+                className="cursor-pointer hover:text-red-600 transition"
+              >
+                Switches
+              </Link>
+            </li>
 
             <li>Modular Plates</li>
 
@@ -278,7 +335,7 @@ export default function Footer() {
           lg:text-[20px]
         "
       >
-        <p>© 2026 C ⚡ FOUR. All Rights Reserved.</p>
+        <p>© 2026 C⚡FOUR. All Rights Reserved.</p>
 
         <p>Designed for smarter living.</p>
       </div>

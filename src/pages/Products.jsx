@@ -63,11 +63,11 @@ import SpnDoor from "../assets/home/image1.webp";
 import TpnDoor from "../assets/home/image2.webp";
 import Basbar from "../assets/home/image3.webp";
 
-/* ── ADDED: PLUMBING (West Pipe & Teflon Tape) ── */
+/* PLUMBING (West Pipe & Teflon Tape) */
 import westPipeImg from "../assets/pipe.webp";
 import teflonTapeImg from "../assets/tape.webp";
 
-/* ── ADDED: SWITCH / SURFACE BOX ── */
+/* SWITCH / SURFACE BOX */
 import surface1 from "../assets/surface/image1.webp";
 import surface2 from "../assets/surface/image2.webp";
 import surface3 from "../assets/surface/image3.webp";
@@ -104,14 +104,11 @@ export default function Products({ addToCart }) {
   const allProductsRef = useRef(null);
   const detailRef = useRef(null);
 
-  // ── ADDED: ref for protection section ────────────────────────────────────
   const protectionRef = useRef(null);
-  // ─────────────────────────────────────────────────────────────────────────
 
-  // ── ADDED: refs for new sections ─────────────────────────────────────────
   const plumbingRef = useRef(null);
+
   const switchRef = useRef(null);
-  // ─────────────────────────────────────────────────────────────────────────
 
   /* RESET & SCROLL WHEN CATEGORY CHANGES */
 
@@ -135,14 +132,11 @@ export default function Products({ addToCart }) {
           behavior: "smooth",
           block: "center",
         });
-        // ── ADDED: scroll to protection section ──────────────────────────────
       } else if (selectedCategory === "protection") {
         protectionRef.current?.scrollIntoView({
           behavior: "smooth",
           block: "start",
         });
-        // ─────────────────────────────────────────────────────────────────────
-        // ── ADDED: scroll to plumbing & switch sections ───────────────────────
       } else if (selectedCategory === "plumbing") {
         plumbingRef.current?.scrollIntoView({
           behavior: "smooth",
@@ -153,7 +147,6 @@ export default function Products({ addToCart }) {
           behavior: "smooth",
           block: "start",
         });
-        // ─────────────────────────────────────────────────────────────────────
       } else {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -172,7 +165,7 @@ export default function Products({ addToCart }) {
     { image: PipeFittings, title: "Pipe Fittings" },
   ];
 
-  // ── ADDED: PIPES & FITTINGS detailed products ─────────────────────────────
+  // PIPES & FITTINGS detailed products
   const pipesFittingsProducts = [
     {
       image: pf1,
@@ -365,7 +358,6 @@ export default function Products({ addToCart }) {
       ],
     },
   ];
-  // ─────────────────────────────────────────────────────────────────────────
 
   /* LIGHTS */
 
@@ -377,7 +369,7 @@ export default function Products({ addToCart }) {
     { image: BedLights },
   ];
 
-  // ── ADDED: LIGHTS DETAILED products ──────────────────────────────────────
+  // LIGHTS DETAILED products
   const lightsDetailedProducts = [
     {
       image: lt1,
@@ -686,13 +678,10 @@ export default function Products({ addToCart }) {
       rows: [{ model: "CONNECTOR", price: "30/-" }],
     },
   ];
-  // ─────────────────────────────────────────────────────────────────────────
 
-  // ── ADDED: helper to render any row generically ───────────────────────────
   const renderRow = (row) => Object.values(row);
-  // ─────────────────────────────────────────────────────────────────────────
 
-  // ── ADDED: protection products with price/packing data ───────────────────
+  // protection products with price/packing data
   const protectionProducts = [
     {
       image: SpnDoor,
@@ -723,9 +712,8 @@ export default function Products({ addToCart }) {
       ],
     },
   ];
-  // ─────────────────────────────────────────────────────────────────────────
 
-  // ── ADDED: PLUMBING products ──────────────────────────────────────────────
+  // PLUMBING products
   const plumbingProducts = [
     {
       image: teflonTapeImg,
@@ -752,9 +740,8 @@ export default function Products({ addToCart }) {
       ],
     },
   ];
-  // ─────────────────────────────────────────────────────────────────────────
 
-  // ── ADDED: SWITCH / SURFACE BOX products ─────────────────────────────────
+  // SWITCH / SURFACE BOX products
   const switchProducts = [
     {
       image: surface1,
@@ -811,7 +798,6 @@ export default function Products({ addToCart }) {
       ],
     },
   ];
-  // ─────────────────────────────────────────────────────────────────────────
 
   /* ALL PRODUCTS - PAGE 1 */
 
@@ -892,7 +878,6 @@ export default function Products({ addToCart }) {
 
   const relatedProducts = getCurrentPageProducts();
 
-  // ── ADDED: shared dark card + specs table renderer ────────────────────────
   const renderProductCard = (product, index, onCartAdd) => (
     <div
       key={index}
@@ -1010,7 +995,6 @@ export default function Products({ addToCart }) {
       </div>
     </div>
   );
-  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -1495,7 +1479,7 @@ export default function Products({ addToCart }) {
         </section>
       )}
 
-      {/* ── ADDED: PROTECTION SYSTEMS SECTION ───────────────────────────────── */}
+      {/* PROTECTION SYSTEMS SECTION */}
 
       {selectedCategory === "protection" && (
         <section
@@ -1628,9 +1612,7 @@ export default function Products({ addToCart }) {
         </section>
       )}
 
-      {/* ── END PROTECTION SYSTEMS SECTION ──────────────────────────────────── */}
-
-      {/* ── ADDED: PLUMBING SECTION ──────────────────────────────────────────── */}
+      {/* PLUMBING SECTION */}
 
       {selectedCategory === "plumbing" && (
         <section
@@ -1663,9 +1645,7 @@ export default function Products({ addToCart }) {
         </section>
       )}
 
-      {/* ── END PLUMBING SECTION ─────────────────────────────────────────────── */}
-
-      {/* ── ADDED: SWITCH / SURFACE BOX SECTION ─────────────────────────────── */}
+      {/* SWITCH / SURFACE BOX SECTION */}
 
       {selectedCategory === "switch" && (
         <section
@@ -1698,15 +1678,11 @@ export default function Products({ addToCart }) {
         </section>
       )}
 
-      {/* ── END SWITCH / SURFACE BOX SECTION ────────────────────────────────── */}
-
       {/* ALL PRODUCTS */}
 
       {selectedCategory === "all" && (
         <>
-          {/* ======================== */}
           {/* PRODUCT DETAIL FULL VIEW */}
-          {/* ======================== */}
 
           {selectedProduct && (
             <section
@@ -2159,9 +2135,7 @@ export default function Products({ addToCart }) {
             </section>
           )}
 
-          {/* ====================== */}
           {/* ALL PRODUCTS GRID VIEW */}
-          {/* ====================== */}
 
           {!selectedProduct && (
             <section
