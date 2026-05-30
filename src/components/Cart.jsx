@@ -45,7 +45,7 @@ export default function Cart({ cartItems, setCartItems }) {
     setTimeout(() => {
       setShowSuccessAnimation(false);
       setShowOrderSuccess(true);
-    }, 3000);
+    }, 5000);
   };
 
   /* ========================= SUCCESS ANIMATION ========================== */
@@ -53,13 +53,138 @@ export default function Cart({ cartItems, setCartItems }) {
   if (showSuccessAnimation) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="w-28 h-28 rounded-full bg-green-500 flex items-center justify-center animate-bounce">
-            <span className="text-white text-6xl">✓</span>
+        <style>{`
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.7); }
+            to   { opacity: 1; transform: scale(1); }
+          }
+          @keyframes drawCircle {
+            from { stroke-dashoffset: 314; }
+            to   { stroke-dashoffset: 0; }
+          }
+          @keyframes drawCheck {
+            from { stroke-dashoffset: 100; opacity: 0; }
+            to   { stroke-dashoffset: 0; opacity: 1; }
+          }
+          @keyframes barFill {
+            from { width: 0%; }
+            to   { width: 28%; }
+          }
+          @keyframes dotPop {
+            0%   { transform: scale(0); opacity: 0; }
+            70%  { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          .anim-circle   { animation: drawCircle 1s cubic-bezier(.4,0,.2,1) forwards 0.1s; }
+          .anim-check    { animation: drawCheck 0.5s ease forwards 1s; }
+          .anim-title    { animation: fadeInUp 0.6s ease forwards 1.2s; opacity: 0; }
+          .anim-sub      { animation: fadeInUp 0.6s ease forwards 1.5s; opacity: 0; }
+          .anim-divider  { animation: fadeInUp 0.5s ease forwards 1.7s; opacity: 0; }
+          .anim-step1    { animation: dotPop 0.4s ease forwards 1.9s; opacity: 0; }
+          .anim-step2    { animation: dotPop 0.4s ease forwards 2.1s; opacity: 0; }
+          .anim-step3    { animation: dotPop 0.4s ease forwards 2.3s; opacity: 0; }
+          .anim-step4    { animation: dotPop 0.4s ease forwards 2.5s; opacity: 0; }
+          .anim-bar      { animation: barFill 1s ease forwards 2.0s; width: 0%; }
+          .anim-label    { animation: fadeInUp 0.5s ease forwards 2.8s; opacity: 0; }
+        `}</style>
+
+        <div className="flex flex-col items-center text-center px-6 w-full max-w-sm">
+
+          {/* SVG CIRCLE + CHECK */}
+          <div className="relative w-28 h-28 mb-8">
+            <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+              {/* TRACK */}
+              <circle
+                cx="50" cy="50" r="46"
+                fill="none"
+                stroke="#e5e7eb"
+                strokeWidth="4"
+              />
+              {/* ANIMATED RING */}
+              <circle
+                cx="50" cy="50" r="46"
+                fill="none"
+                stroke="#16a34a"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray="314"
+                strokeDashoffset="314"
+                className="anim-circle"
+              />
+            </svg>
+            {/* CHECK MARK */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg viewBox="0 0 52 52" className="w-12 h-12">
+                <polyline
+                  points="10,28 22,40 42,16"
+                  fill="none"
+                  stroke="#16a34a"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray="100"
+                  strokeDashoffset="100"
+                  className="anim-check"
+                />
+              </svg>
+            </div>
           </div>
-          <h2 className="mt-6 text-4xl font-bold text-green-600 animate-pulse">
-            Order Placed!
+
+          {/* TITLE */}
+          <h2 className="anim-title text-3xl font-bold text-gray-900 mb-2">
+            Order Confirmed
           </h2>
+
+          {/* SUBTITLE */}
+          <p className="anim-sub text-gray-500 text-base mb-8">
+            Thank you! Your order is on its way.
+          </p>
+
+          {/* DIVIDER */}
+          <div className="anim-divider w-full h-px bg-gray-200 mb-8" />
+
+          {/* PROGRESS TRACK */}
+          <div className="anim-divider w-full mb-2">
+            <div className="flex justify-between text-xs text-gray-400 mb-3">
+              <span>Confirmed</span>
+              <span>Processing</span>
+              <span>Shipped</span>
+              <span>Delivered</span>
+            </div>
+
+            {/* BAR */}
+            <div className="relative w-full h-1 bg-gray-200 rounded-full mb-4">
+              <div
+                className="anim-bar absolute top-0 left-0 h-1 bg-green-600 rounded-full"
+              />
+            </div>
+
+            {/* DOTS */}
+            <div className="flex justify-between">
+              <div className="anim-step1 flex flex-col items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-green-600" />
+              </div>
+              <div className="anim-step2 flex flex-col items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
+              <div className="anim-step3 flex flex-col items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
+              <div className="anim-step4 flex flex-col items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-gray-300" />
+              </div>
+            </div>
+          </div>
+
+          {/* BOTTOM LABEL */}
+          <p className="anim-label text-xs text-gray-400 mt-6">
+            We'll notify you when your order ships
+          </p>
+
         </div>
       </div>
     );
