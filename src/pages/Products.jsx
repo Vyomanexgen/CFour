@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 
 import heroImg from "../assets/products/hero.webp";
@@ -88,6 +88,131 @@ import image12 from "../assets/products/image12.webp";
 import image13 from "../assets/products/image13.webp";
 import image14 from "../assets/products/image14.webp";
 
+/* ── SKELETON LOADER ── */
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100 animate-pulse">
+      <div className="bg-gray-200 h-[220px] w-full" />
+      <div className="p-4 space-y-3">
+        <div className="h-5 bg-gray-200 rounded w-3/4" />
+        <div className="h-4 bg-gray-200 rounded w-1/2" />
+        <div className="h-4 bg-gray-200 rounded w-2/3" />
+        <div className="flex gap-2 mt-4">
+          <div className="h-9 bg-gray-200 rounded-full w-24" />
+          <div className="h-9 bg-gray-200 rounded-full w-24" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── WISHLIST BUTTON ── */
+function WishlistBtn({ productId, wishlisted, onToggle }) {
+  return (
+    <button
+      aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle(productId);
+      }}
+      className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className={`w-5 h-5 ${wishlisted ? "fill-red-500 stroke-red-500" : "fill-none stroke-gray-500"}`}
+        strokeWidth="2"
+      >
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
+    </button>
+  );
+}
+
+/* ── QUICK VIEW MODAL ── */
+function QuickViewModal({ product, onClose, onAddToCart }) {
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Quick view: ${product.title}`}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-pointer"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          aria-label="Close quick view"
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
+        >
+          ✕
+        </button>
+        <img
+          src={product.image}
+          alt={product.title}
+          className="w-full h-56 object-contain bg-gray-50 rounded-xl mb-4"
+          onError={(e) => {
+            e.target.src = "https://placehold.co/400x300?text=No+Image";
+          }}
+        />
+        <h3 className="text-xl font-bold mb-1">{product.title}</h3>
+        <div
+          className="flex text-yellow-400 text-sm mb-2"
+          aria-label={`${product.rating} out of 5 stars`}
+        >
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span key={i}>{i < (product.rating || 4) ? "★" : "☆"}</span>
+          ))}
+          <span className="text-gray-400 ml-2 text-xs">
+            ({product.reviews || 128})
+          </span>
+        </div>
+        <p className="text-gray-500 text-sm mb-2">
+          Size: 19MM · Length: 20ft · Material: PVC
+        </p>
+        {product.inStock !== undefined && (
+          <span
+            className={`inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4 ${product.inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+          >
+            {product.inStock ? "✓ In Stock" : "✗ Out of Stock"}
+          </span>
+        )}
+        <div className="flex gap-3 mt-2">
+          <button
+            onClick={() => {
+              onAddToCart(product);
+              onClose();
+            }}
+            className="flex-1 bg-red-500 text-white py-2 rounded-full text-sm font-semibold hover:bg-red-600 transition focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
+          >
+            Add to Cart
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 border border-gray-300 py-2 rounded-full text-sm font-semibold hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-gray-400 cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Products({ addToCart }) {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -99,22 +224,45 @@ export default function Products({ addToCart }) {
   const [selectedColor, setSelectedColor] = useState("green");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  /* ── NEW STATE ── */
+  const [isLoading, setIsLoading] = useState(true);
+  const [sortBy, setSortBy] = useState("default");
+  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedColors, setSelectedColors] = useState([]);
+  const [availabilityFilter, setAvailabilityFilter] = useState("all");
+  const [wishlist, setWishlist] = useState([]);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [imgErrors, setImgErrors] = useState({});
+
+  const [showDiameter, setShowDiameter] = useState(true);
+  const [showMaterial, setShowMaterial] = useState(true);
+  const [showFittings, setShowFittings] = useState(true);
+
+  const [selectedDiameter, setSelectedDiameter] = useState([]);
+  const [selectedMaterials, setSelectedMaterials] = useState([]);
+  const [selectedFittings, setSelectedFittings] = useState([]);
+
   const pipesRef = useRef(null);
   const lightsRef = useRef(null);
   const allProductsRef = useRef(null);
   const detailRef = useRef(null);
-
   const protectionRef = useRef(null);
-
   const plumbingRef = useRef(null);
-
   const switchRef = useRef(null);
 
-  /* RESET & SCROLL WHEN CATEGORY CHANGES */
+  /* ── SIMULATE LOADING ── */
+  useEffect(() => {
+    setIsLoading(true);
+    const t = setTimeout(() => setIsLoading(false), 700);
+    return () => clearTimeout(t);
+  }, [selectedCategory, currentPage]);
 
+  /* RESET & SCROLL WHEN CATEGORY CHANGES */
   useEffect(() => {
     setSelectedProduct(null);
     setCurrentPage(1);
+    setSortBy("default");
 
     const timer = setTimeout(() => {
       if (selectedCategory === "pipes") {
@@ -155,8 +303,19 @@ export default function Products({ addToCart }) {
     return () => clearTimeout(timer);
   }, [selectedCategory]);
 
-  /* PIPES */
+  /* ── WISHLIST TOGGLE ── */
+  const toggleWishlist = useCallback((id) => {
+    setWishlist((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }, []);
 
+  /* ── IMAGE ERROR ── */
+  const handleImgError = useCallback((id) => {
+    setImgErrors((prev) => ({ ...prev, [id]: true }));
+  }, []);
+
+  /* PIPES */
   const pipeProducts = [
     { image: PvcPipes, title: "PVC Pipes" },
     { image: CpvcPipes, title: "CPVC Pipes" },
@@ -360,7 +519,6 @@ export default function Products({ addToCart }) {
   ];
 
   /* LIGHTS */
-
   const lightProducts = [
     { image: CeilingLights },
     { image: LedBulb },
@@ -799,49 +957,223 @@ export default function Products({ addToCart }) {
     },
   ];
 
-  /* ALL PRODUCTS - PAGE 1 */
-
-  const allProductsPage1 = [
-    { image: image1, title: "CFOUR PVC Pipes" },
-    { image: image2, title: "CFOUR Conduit Bends" },
-    { image: image3, title: "CFOUR T-Bow Fittings" },
-    { image: image4, title: "CFOUR Bow Fittings" },
-    { image: image5, title: "CFOUR L-Bow Fittings" },
-    { image: image6, title: "CFOUR Pipe" },
+  /* ALL PRODUCTS DATA — enriched with filter fields */
+  const allProductsRaw = [
+    {
+      image: image1,
+      title: "CFOUR PVC Pipes",
+      price: 67,
+      brand: "CFOUR",
+      color: "green",
+      inStock: true,
+      rating: 4,
+      reviews: 128,
+      isNew: false,
+      popularity: 95,
+    },
+    {
+      image: image2,
+      title: "CFOUR Conduit Bends",
+      price: 8,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 85,
+      isNew: false,
+      popularity: 80,
+    },
+    {
+      image: image3,
+      title: "CFOUR T-Bow Fittings",
+      price: 5,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 5,
+      reviews: 60,
+      isNew: true,
+      popularity: 70,
+    },
+    {
+      image: image4,
+      title: "CFOUR Bow Fittings",
+      price: 4,
+      brand: "CFOUR",
+      color: "white",
+      inStock: false,
+      rating: 3,
+      reviews: 40,
+      isNew: false,
+      popularity: 55,
+    },
+    {
+      image: image5,
+      title: "CFOUR L-Bow Fittings",
+      price: 4,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 75,
+      isNew: false,
+      popularity: 65,
+    },
+    {
+      image: image6,
+      title: "CFOUR Pipe",
+      price: 103,
+      brand: "CFOUR",
+      color: "green",
+      inStock: true,
+      rating: 5,
+      reviews: 200,
+      isNew: false,
+      popularity: 99,
+    },
+    {
+      image: image7,
+      title: "CFOUR Junction Box",
+      price: 14,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 55,
+      isNew: true,
+      popularity: 60,
+    },
+    {
+      image: image8,
+      title: "CFOUR Deep Box",
+      price: 20,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 3,
+      reviews: 30,
+      isNew: false,
+      popularity: 45,
+    },
+    {
+      image: image9,
+      title: "CFOUR Flexible Pipe",
+      price: 420,
+      brand: "CFOUR",
+      color: "white",
+      inStock: false,
+      rating: 4,
+      reviews: 90,
+      isNew: false,
+      popularity: 75,
+    },
+    {
+      image: image10,
+      title: "CFOUR Pipe Dummy",
+      price: 2,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 3,
+      reviews: 20,
+      isNew: false,
+      popularity: 30,
+    },
+    {
+      image: image11,
+      title: "CFOUR Cable Tie",
+      price: 32,
+      brand: "CFOUR",
+      color: "black",
+      inStock: true,
+      rating: 5,
+      reviews: 180,
+      isNew: false,
+      popularity: 90,
+    },
+    {
+      image: image12,
+      title: "CFOUR Tape Roll",
+      price: 16,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 110,
+      isNew: false,
+      popularity: 85,
+    },
+    {
+      image: image13,
+      title: "CFOUR Dummy Sheet",
+      price: 45,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 45,
+      isNew: true,
+      popularity: 50,
+    },
+    {
+      image: image14,
+      title: "CFOUR Foot Light",
+      price: 180,
+      brand: "CFOUR",
+      color: "white",
+      inStock: false,
+      rating: 4,
+      reviews: 65,
+      isNew: false,
+      popularity: 72,
+    },
   ];
 
-  /* ALL PRODUCTS - PAGE 2 */
+  /* ── FILTER + SORT LOGIC ── */
+  const filteredAndSortedProducts = (() => {
+    let list = [...allProductsRaw];
+    if (selectedBrands.length > 0)
+      list = list.filter((p) => selectedBrands.includes(p.brand));
+    if (selectedColors.length > 0)
+      list = list.filter((p) => selectedColors.includes(p.color));
+    if (availabilityFilter === "instock") list = list.filter((p) => p.inStock);
+    else if (availabilityFilter === "outofstock")
+      list = list.filter((p) => !p.inStock);
+    list = list.filter(
+      (p) => p.price >= priceRange[0] && p.price <= priceRange[1],
+    );
+    if (sortBy === "price-asc") list.sort((a, b) => a.price - b.price);
+    else if (sortBy === "price-desc") list.sort((a, b) => b.price - a.price);
+    else if (sortBy === "newest")
+      list.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
+    else if (sortBy === "popularity")
+      list.sort((a, b) => b.popularity - a.popularity);
+    return list;
+  })();
 
-  const allProductsPage2 = [
-    { image: image7, title: "CFOUR PVC Pipes" },
-    { image: image8, title: "CFOUR Conduit Bends" },
-    { image: image9, title: "CFOUR T-Bow Fittings" },
-    { image: image10, title: "CFOUR Bow Fittings" },
-    { image: image11, title: "CFOUR L-Bow Fittings" },
-    { image: image12, title: "CFOUR Pipe" },
-  ];
+  /* ── CHANGED: 6 → 8 items per page ── */
+  const ITEMS_PER_PAGE = 8;
+  const totalPages = Math.ceil(
+    filteredAndSortedProducts.length / ITEMS_PER_PAGE,
+  );
+  const paginatedProducts = filteredAndSortedProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
 
-  /* ALL PRODUCTS - PAGE 3 */
-
-  const allProductsPage3 = [
-    { image: image13, title: "CFOUR PVC Pipes" },
-    { image: image14, title: "CFOUR Conduit Bends" },
-  ];
-
-  /* GET CURRENT PAGE PRODUCTS */
-
+  /* GET CURRENT PAGE PRODUCTS — kept for non-"all" categories */
   const getCurrentPageProducts = () => {
-    if (currentPage === 1) return allProductsPage1;
-    if (currentPage === 2) return allProductsPage2;
-    if (currentPage === 3) return allProductsPage3;
-    return allProductsPage1;
+    if (selectedCategory !== "all") {
+      if (currentPage === 1) return allProductsRaw.slice(0, 6);
+      if (currentPage === 2) return allProductsRaw.slice(6, 12);
+      if (currentPage === 3) return allProductsRaw.slice(12);
+    }
+    return paginatedProducts;
   };
 
   /* HANDLE PAGE CHANGE */
-
   const handlePageChange = (page) => {
     setCurrentPage(page);
-
     allProductsRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "center",
@@ -849,25 +1181,18 @@ export default function Products({ addToCart }) {
   };
 
   /* HANDLE VIEW DETAILS */
-
   const handleViewDetails = (item) => {
     setSelectedProduct(item);
     setActiveTab("Specifications");
     setSelectedColor("green");
-
     setTimeout(() => {
-      detailRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
   };
 
   /* HANDLE BACK */
-
   const handleBack = () => {
     setSelectedProduct(null);
-
     allProductsRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "center",
@@ -875,8 +1200,283 @@ export default function Products({ addToCart }) {
   };
 
   /* RELATED PRODUCTS */
+  const relatedProducts = allProductsRaw.slice(0, 6);
 
-  const relatedProducts = getCurrentPageProducts();
+  /* ── FILTER PANEL COMPONENT ── */
+  const allBrands = ["CFOUR"];
+  const allColors = ["green", "white", "black"];
+
+  const FilterPanel = () => (
+    <div
+      className={`
+        w-full
+        lg:w-[260px]
+        bg-white
+        p-5
+        rounded-xl
+        shadow-md
+        h-fit
+        lg:block
+        ${sidebarOpen ? "block" : "hidden"}
+      `}
+    >
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-xl font-bold">Product Catalog & Filters</h2>
+        <button
+          onClick={() => {
+            setSelectedBrands([]);
+            setSelectedColors([]);
+            setPriceRange([0, 10000]);
+            setAvailabilityFilter("all");
+            setSortBy("default");
+            setCurrentPage(1);
+          }}
+          className="text-xs text-red-500 hover:underline focus:outline-none cursor-pointer"
+        >
+          Clear All
+        </button>
+      </div>
+
+      {/* SORT */}
+      <div className="mb-6">
+        <h3 className="font-bold text-base mb-3">Sort By</h3>
+        <select
+          aria-label="Sort products"
+          value={sortBy}
+          onChange={(e) => {
+            setSortBy(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
+        >
+          <option value="default">Default</option>
+          <option value="price-asc">Price: Low → High</option>
+          <option value="price-desc">Price: High → Low</option>
+          <option value="newest">Newest First</option>
+          <option value="popularity">Most Popular</option>
+        </select>
+      </div>
+
+      {/* PRICE RANGE — smooth slider fix */}
+      <div className="mb-6">
+        <h3 className="font-bold text-base mb-3">Price Range (₹)</h3>
+        <div className="relative pt-1">
+          <input
+            type="range"
+            min="0"
+            max="10000"
+            step="1"
+            value={priceRange[1]}
+            onChange={(e) => {
+              setPriceRange([priceRange[0], Number(e.target.value)]);
+              setCurrentPage(1);
+            }}
+            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-red-500"
+            style={{
+              background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${(priceRange[1] / 10000) * 100}%, #e5e7eb ${(priceRange[1] / 10000) * 100}%, #e5e7eb 100%)`,
+            }}
+          />
+        </div>
+        <div className="flex justify-between text-sm text-gray-600 mt-2">
+          <span className="font-medium">₹{priceRange[0]}</span>
+          <span className="font-medium text-red-500">₹{priceRange[1]}</span>
+        </div>
+      </div>
+
+      {/* BRAND */}
+      <div className="mb-6">
+        <h3 className="font-bold text-base mb-3">Brand</h3>
+        {allBrands.map((brand) => (
+          <label
+            key={brand}
+            className="flex items-center gap-2 mb-2 cursor-pointer text-sm"
+          >
+            <input
+              type="checkbox"
+              checked={selectedBrands.includes(brand)}
+              onChange={() => {
+                setSelectedBrands((prev) =>
+                  prev.includes(brand)
+                    ? prev.filter((b) => b !== brand)
+                    : [...prev, brand],
+                );
+                setCurrentPage(1);
+              }}
+              className="accent-red-500 w-4 h-4 cursor-pointer"
+              aria-label={`Filter by brand ${brand}`}
+            />
+            {brand}
+          </label>
+        ))}
+      </div>
+
+      {/* COLOUR */}
+      <div className="mb-6">
+        <h3 className="font-bold text-base mb-3">Colour</h3>
+        <div className="flex gap-3 flex-wrap">
+          {allColors.map((c) => (
+            <button
+              key={c}
+              aria-label={`Filter by colour ${c}`}
+              onClick={() => {
+                setSelectedColors((prev) =>
+                  prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
+                );
+                setCurrentPage(1);
+              }}
+              className={`w-8 h-8 rounded-full border-2 transition focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-400 cursor-pointer ${selectedColors.includes(c) ? "border-red-500 scale-110" : "border-gray-300"}`}
+              style={{
+                backgroundColor:
+                  c === "green"
+                    ? "#16a34a"
+                    : c === "black"
+                      ? "#111"
+                      : "#e5e7eb",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* AVAILABILITY */}
+      <div className="mb-6">
+        <h3 className="font-bold text-base mb-3">Availability</h3>
+        {[
+          ["all", "All"],
+          ["instock", "In Stock"],
+          ["outofstock", "Out of Stock"],
+        ].map(([val, label]) => (
+          <label
+            key={val}
+            className="flex items-center gap-2 mb-2 cursor-pointer text-sm"
+          >
+            <input
+              type="radio"
+              name="availability"
+              value={val}
+              checked={availabilityFilter === val}
+              onChange={() => {
+                setAvailabilityFilter(val);
+                setCurrentPage(1);
+              }}
+              className="accent-red-500 w-4 h-4 cursor-pointer"
+            />
+            {label}
+          </label>
+        ))}
+      </div>
+
+      {/* DIAMETER */}
+      <div className="mb-5">
+        <div
+          className="flex justify-between items-center mb-2 cursor-pointer"
+          onClick={() => setShowDiameter(!showDiameter)}
+        >
+          <h4 className="font-semibold">Diameter</h4>
+          <span>{showDiameter ? "⌃" : "⌄"}</span>
+        </div>
+
+        {showDiameter && (
+          <div className="space-y-2 text-sm">
+            {["1/2 inch", "1 inch", "2 inch", "4 inch", "6+ inch"].map(
+              (item) => (
+                <label
+                  key={item}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedDiameter.includes(item)}
+                    onChange={() =>
+                      setSelectedDiameter((prev) =>
+                        prev.includes(item)
+                          ? prev.filter((x) => x !== item)
+                          : [...prev, item],
+                      )
+                    }
+                    className="w-4 h-4 accent-red-500 cursor-pointer"
+                  />
+                  {item}
+                </label>
+              ),
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* MATERIAL */}
+      <div className="mb-5">
+        <div
+          className="flex justify-between items-center mb-2 cursor-pointer"
+          onClick={() => setShowMaterial(!showMaterial)}
+        >
+          <h4 className="font-semibold">Material</h4>
+          <span>{showMaterial ? "⌃" : "⌄"}</span>
+        </div>
+
+        {showMaterial && (
+          <div className="space-y-2 text-sm">
+            {["PVC", "UPVC", "CPVC"].map((item) => (
+              <label
+                key={item}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedMaterials.includes(item)}
+                  onChange={() =>
+                    setSelectedMaterials((prev) =>
+                      prev.includes(item)
+                        ? prev.filter((x) => x !== item)
+                        : [...prev, item],
+                    )
+                  }
+                  className="w-4 h-4 accent-red-500 cursor-pointer"
+                />
+                {item}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* FITTINGS */}
+      <div className="mb-5">
+        <div
+          className="flex justify-between items-center mb-2 cursor-pointer"
+          onClick={() => setShowFittings(!showFittings)}
+        >
+          <h4 className="font-semibold">Fittings</h4>
+          <span>{showFittings ? "⌃" : "⌄"}</span>
+        </div>
+
+        {showFittings && (
+          <div className="space-y-2 text-sm">
+            {["Elbows", "Tees", "Couplings", "Flanges"].map((item) => (
+              <label
+                key={item}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedFittings.includes(item)}
+                  onChange={() =>
+                    setSelectedFittings((prev) =>
+                      prev.includes(item)
+                        ? prev.filter((x) => x !== item)
+                        : [...prev, item],
+                    )
+                  }
+                  className="w-4 h-4 accent-red-500 cursor-pointer"
+                />
+                {item}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   const renderProductCard = (product, index, onCartAdd) => (
     <div
@@ -887,10 +1487,14 @@ export default function Products({ addToCart }) {
         lg:flex-row
         gap-0
         bg-[#2d2d2d]
-        rounded-md
+        rounded-xl
         overflow-hidden
-        shadow-md
+        shadow-lg
         w-full
+        hover:-translate-y-1
+        hover:shadow-2xl
+        transition-all
+        duration-300
       "
     >
       {/* IMAGE BOX */}
@@ -912,12 +1516,10 @@ export default function Products({ addToCart }) {
         <img
           src={product.image}
           alt={product.title}
-          className="
-            w-full
-            h-full
-            object-cover
-            object-center
-          "
+          className="w-full h-full object-cover object-center"
+          onError={(e) => {
+            e.target.src = "https://placehold.co/400x300?text=No+Image";
+          }}
         />
       </div>
 
@@ -971,6 +1573,7 @@ export default function Products({ addToCart }) {
                 )}
                 <td className="py-2 px-2 sm:px-3 text-center">
                   <button
+                    aria-label={`Add ${spec.description} to cart`}
                     onClick={() => onCartAdd(product, spec)}
                     className="
                       bg-red-500
@@ -983,6 +1586,11 @@ export default function Products({ addToCart }) {
                       hover:bg-red-600
                       transition
                       whitespace-nowrap
+                      focus:outline-none
+                      focus:ring-2
+                      focus:ring-red-400
+                      min-h-[36px]
+                      cursor-pointer
                     "
                   >
                     Add to Cart
@@ -998,70 +1606,61 @@ export default function Products({ addToCart }) {
 
   return (
     <>
-      {/* HERO IMAGE */}
+      {/* QUICK VIEW MODAL */}
+      {quickViewProduct && (
+        <QuickViewModal
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+          onAddToCart={addToCart}
+        />
+      )}
 
+      {/* HERO IMAGE */}
       {selectedCategory !== "all" && (
         <section className="w-full bg-black overflow-hidden pt-[85px]">
           <img
             src={heroImg}
             alt="Products Hero"
-            className="
-      w-full
-      object-cover
-      object-top
-      "
+            className="w-full object-cover object-top"
           />
         </section>
       )}
 
       {/* DEFAULT PRODUCTS PAGE */}
-
       {selectedCategory === "products" && (
         <>
           {/* PIPES */}
-
           <section
             ref={pipesRef}
-            className="
-            w-full
-            py-10
-            bg-[#d9d9d9]
-            overflow-hidden
-            "
+            className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
           >
             <div className="px-6">
               <h2 className="text-4xl font-semibold mb-8">Pipes</h2>
-
-              <div
-                className="
-                flex
-                gap-6
-                overflow-x-auto
-                pb-4
-                no-scrollbar
-                "
-              >
+              <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
                 {pipeProducts.map((item, index) => (
                   <div
                     key={index}
                     className="
-                    min-w-[280px]
-                    bg-[#f5f5f5]
-                    rounded-md
-                    p-5
-                    flex-shrink-0
-                    shadow-md
+                      min-w-[280px]
+                      bg-[#f5f5f5]
+                      rounded-xl
+                      p-5
+                      flex-shrink-0
+                      shadow-md
+                      hover:-translate-y-1
+                      hover:shadow-xl
+                      transition-all
+                      duration-300
                     "
                   >
                     <img
                       src={item.image}
-                      alt="pipe"
-                      className="
-                      w-full
-                      h-[320px]
-                      object-contain
-                      scale-110
-                      "
+                      alt={item.title || "pipe product"}
+                      className="w-full h-[320px] object-contain scale-110"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://placehold.co/300x320?text=No+Image";
+                      }}
                     />
                   </div>
                 ))}
@@ -1070,49 +1669,37 @@ export default function Products({ addToCart }) {
           </section>
 
           {/* LIGHTS */}
-
           <section
             ref={lightsRef}
-            className="
-            w-full
-            py-10
-            bg-[#d9d9d9]
-            overflow-hidden
-            "
+            className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
           >
             <div className="px-6">
               <h2 className="text-4xl font-semibold mb-8">Lights</h2>
-
-              <div
-                className="
-                flex
-                gap-6
-                overflow-x-auto
-                pb-4
-                no-scrollbar
-                "
-              >
+              <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
                 {lightProducts.map((item, index) => (
                   <div
                     key={index}
                     className="
-                    min-w-[280px]
-                    bg-[#f5f5f5]
-                    rounded-md
-                    p-5
-                    flex-shrink-0
-                    shadow-md
+                      min-w-[280px]
+                      bg-[#f5f5f5]
+                      rounded-xl
+                      p-5
+                      flex-shrink-0
+                      shadow-md
+                      hover:-translate-y-1
+                      hover:shadow-xl
+                      transition-all
+                      duration-300
                     "
                   >
                     <img
                       src={item.image}
-                      alt="light"
-                      className="
-                      w-full
-                      h-[320px]
-                      object-contain
-                      scale-110
-                      "
+                      alt="light product"
+                      className="w-full h-[320px] object-contain scale-110"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://placehold.co/300x320?text=No+Image";
+                      }}
                     />
                   </div>
                 ))}
@@ -1123,57 +1710,43 @@ export default function Products({ addToCart }) {
       )}
 
       {/* ONLY PIPES */}
-
       {selectedCategory === "pipes" && (
         <section
           ref={pipesRef}
-          className="
-          w-full
-          py-10
-          bg-[#d9d9d9]
-          overflow-hidden
-          "
+          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
         >
           <div className="px-4 sm:px-6">
-            {/* ── EXISTING PIPE CARDS — UNTOUCHED ── */}
             <h2 className="text-3xl sm:text-4xl font-semibold mb-8">Pipes</h2>
-
-            <div
-              className="
-              flex
-              gap-6
-              overflow-x-auto
-              pb-4
-              no-scrollbar
-              "
-            >
+            <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
               {pipeProducts.map((item, index) => (
                 <div
                   key={index}
                   className="
-                  min-w-[280px]
-                  bg-[#f5f5f5]
-                  rounded-md
-                  p-5
-                  flex-shrink-0
-                  shadow-md
+                    min-w-[280px]
+                    bg-[#f5f5f5]
+                    rounded-xl
+                    p-5
+                    flex-shrink-0
+                    shadow-md
+                    hover:-translate-y-1
+                    hover:shadow-xl
+                    transition-all
+                    duration-300
                   "
                 >
                   <img
                     src={item.image}
-                    alt="pipe"
-                    className="
-                    w-full
-                    h-[320px]
-                    object-contain
-                    scale-110
-                    "
+                    alt={item.title}
+                    className="w-full h-[320px] object-contain scale-110"
+                    onError={(e) => {
+                      e.target.src =
+                        "https://placehold.co/300x320?text=No+Image";
+                    }}
                   />
                 </div>
               ))}
             </div>
 
-            {/* ── PIPES & FITTINGS DETAILED SECTION BELOW ── */}
             <h2 className="text-3xl sm:text-4xl font-semibold mt-16 mb-8">
               PIPES & FITTINGS
             </h2>
@@ -1183,41 +1756,44 @@ export default function Products({ addToCart }) {
                 <div
                   key={index}
                   className="
-                  flex
-                  flex-col
-                  lg:flex-row
-                  gap-0
-                  bg-[#2d2d2d]
-                  rounded-md
-                  overflow-hidden
-                  shadow-md
+                    flex
+                    flex-col
+                    lg:flex-row
+                    gap-0
+                    bg-[#2d2d2d]
+                    rounded-xl
+                    overflow-hidden
+                    shadow-lg
+                    hover:-translate-y-1
+                    hover:shadow-2xl
+                    transition-all
+                    duration-300
                   "
                 >
                   {/* PRODUCT IMAGE */}
                   <div
                     className="
-                    flex
-                    items-center
-                    justify-center
-                    bg-[#3a3a3a]
-                    w-full
-                    h-[240px]
-                    sm:h-[280px]
-                    lg:w-[280px]
-                    lg:h-auto
-                    flex-shrink-0
-                    overflow-hidden
+                      flex
+                      items-center
+                      justify-center
+                      bg-[#3a3a3a]
+                      w-full
+                      h-[240px]
+                      sm:h-[280px]
+                      lg:w-[280px]
+                      lg:h-auto
+                      flex-shrink-0
+                      overflow-hidden
                     "
                   >
                     <img
                       src={product.image}
                       alt={product.title}
-                      className="
-                      w-full
-                      h-full
-                      object-cover
-                      object-center
-                      "
+                      className="w-full h-full object-cover object-center"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://placehold.co/400x300?text=No+Image";
+                      }}
                     />
                   </div>
 
@@ -1226,7 +1802,6 @@ export default function Products({ addToCart }) {
                     <h3 className="text-white text-lg sm:text-xl font-bold mb-4 tracking-wide">
                       {product.title}
                     </h3>
-
                     <table className="w-full text-xs sm:text-sm min-w-[300px]">
                       <thead>
                         <tr className="border-b border-gray-500">
@@ -1261,6 +1836,7 @@ export default function Products({ addToCart }) {
                             </td>
                             <td className="py-2 px-2 sm:px-3 text-center">
                               <button
+                                aria-label={`Add ${spec.description} to cart`}
                                 onClick={() =>
                                   addToCart({
                                     image: product.image,
@@ -1270,16 +1846,21 @@ export default function Products({ addToCart }) {
                                   })
                                 }
                                 className="
-                                bg-red-500
-                                text-white
-                                px-2
-                                sm:px-3
-                                py-1
-                                rounded-full
-                                text-xs
-                                hover:bg-red-600
-                                transition
-                                whitespace-nowrap
+                                  bg-red-500
+                                  text-white
+                                  px-2
+                                  sm:px-3
+                                  py-1
+                                  rounded-full
+                                  text-xs
+                                  hover:bg-red-600
+                                  transition
+                                  whitespace-nowrap
+                                  focus:outline-none
+                                  focus:ring-2
+                                  focus:ring-red-400
+                                  min-h-[36px]
+                                  cursor-pointer
                                 "
                               >
                                 Add to Cart
@@ -1293,63 +1874,48 @@ export default function Products({ addToCart }) {
                 </div>
               ))}
             </div>
-            {/* ── END PIPES & FITTINGS ── */}
           </div>
         </section>
       )}
 
       {/* ONLY LIGHTS */}
-
       {selectedCategory === "lights" && (
         <section
           ref={lightsRef}
-          className="
-          w-full
-          py-10
-          bg-[#d9d9d9]
-          overflow-hidden
-          "
+          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
         >
           <div className="px-4 sm:px-6">
-            {/* ── EXISTING LIGHTS CARDS — UNTOUCHED ── */}
             <h2 className="text-3xl sm:text-4xl font-semibold mb-8">Lights</h2>
-
-            <div
-              className="
-              flex
-              gap-6
-              overflow-x-auto
-              pb-4
-              no-scrollbar
-              "
-            >
+            <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
               {lightProducts.map((item, index) => (
                 <div
                   key={index}
                   className="
-                  min-w-[280px]
-                  bg-[#f5f5f5]
-                  rounded-md
-                  p-5
-                  flex-shrink-0
-                  shadow-md
+                    min-w-[280px]
+                    bg-[#f5f5f5]
+                    rounded-xl
+                    p-5
+                    flex-shrink-0
+                    shadow-md
+                    hover:-translate-y-1
+                    hover:shadow-xl
+                    transition-all
+                    duration-300
                   "
                 >
                   <img
                     src={item.image}
-                    alt="light"
-                    className="
-                    w-full
-                    h-[320px]
-                    object-contain
-                    scale-110
-                    "
+                    alt="light product"
+                    className="w-full h-[320px] object-contain scale-110"
+                    onError={(e) => {
+                      e.target.src =
+                        "https://placehold.co/300x320?text=No+Image";
+                    }}
                   />
                 </div>
               ))}
             </div>
 
-            {/* ── LIGHTS DETAILED SECTION BELOW ── */}
             <h2 className="text-3xl sm:text-4xl font-semibold mt-16 mb-8">
               LIGHTS & ACCESSORIES
             </h2>
@@ -1359,41 +1925,44 @@ export default function Products({ addToCart }) {
                 <div
                   key={index}
                   className="
-                  flex
-                  flex-col
-                  lg:flex-row
-                  gap-0
-                  bg-[#2d2d2d]
-                  rounded-md
-                  overflow-hidden
-                  shadow-md
+                    flex
+                    flex-col
+                    lg:flex-row
+                    gap-0
+                    bg-[#2d2d2d]
+                    rounded-xl
+                    overflow-hidden
+                    shadow-lg
+                    hover:-translate-y-1
+                    hover:shadow-2xl
+                    transition-all
+                    duration-300
                   "
                 >
                   {/* PRODUCT IMAGE */}
                   <div
                     className="
-                    flex
-                    items-center
-                    justify-center
-                    bg-[#3a3a3a]
-                    w-full
-                    h-[240px]
-                    sm:h-[280px]
-                    lg:w-[280px]
-                    lg:h-auto
-                    flex-shrink-0
-                    overflow-hidden
+                      flex
+                      items-center
+                      justify-center
+                      bg-[#3a3a3a]
+                      w-full
+                      h-[240px]
+                      sm:h-[280px]
+                      lg:w-[280px]
+                      lg:h-auto
+                      flex-shrink-0
+                      overflow-hidden
                     "
                   >
                     <img
                       src={product.image}
                       alt={product.title}
-                      className="
-                      w-full
-                      h-full
-                      object-cover
-                      object-center
-                      "
+                      className="w-full h-full object-cover object-center"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://placehold.co/400x300?text=No+Image";
+                      }}
                     />
                   </div>
 
@@ -1402,22 +1971,13 @@ export default function Products({ addToCart }) {
                     <h3 className="text-white text-lg sm:text-xl font-bold mb-4 tracking-wide">
                       {product.title}
                     </h3>
-
                     <table className="w-full text-xs sm:text-sm min-w-[300px]">
                       <thead>
                         <tr className="border-b border-gray-500">
                           {product.columns.map((col, cIndex) => (
                             <th
                               key={cIndex}
-                              className="
-                              text-gray-400
-                              text-left
-                              py-2
-                              px-2
-                              sm:px-3
-                              font-medium
-                              whitespace-nowrap
-                              "
+                              className="text-gray-400 text-left py-2 px-2 sm:px-3 font-medium whitespace-nowrap"
                             >
                               {col}
                             </th>
@@ -1443,6 +2003,7 @@ export default function Products({ addToCart }) {
                             ))}
                             <td className="py-2 px-2 sm:px-3 text-center">
                               <button
+                                aria-label={`Add ${product.title} to cart`}
                                 onClick={() =>
                                   addToCart({
                                     image: product.image,
@@ -1451,16 +2012,21 @@ export default function Products({ addToCart }) {
                                   })
                                 }
                                 className="
-                                bg-red-500
-                                text-white
-                                px-2
-                                sm:px-3
-                                py-1
-                                rounded-full
-                                text-xs
-                                hover:bg-red-600
-                                transition
-                                whitespace-nowrap
+                                  bg-red-500
+                                  text-white
+                                  px-2
+                                  sm:px-3
+                                  py-1
+                                  rounded-full
+                                  text-xs
+                                  hover:bg-red-600
+                                  transition
+                                  whitespace-nowrap
+                                  focus:outline-none
+                                  focus:ring-2
+                                  focus:ring-red-400
+                                  min-h-[36px]
+                                  cursor-pointer
                                 "
                               >
                                 Add to Cart
@@ -1474,74 +2040,67 @@ export default function Products({ addToCart }) {
                 </div>
               ))}
             </div>
-            {/* ── END LIGHTS DETAILED ── */}
           </div>
         </section>
       )}
 
       {/* PROTECTION SYSTEMS SECTION */}
-
       {selectedCategory === "protection" && (
         <section
           ref={protectionRef}
-          className="
-          w-full
-          py-10
-          bg-[#d9d9d9]
-          overflow-hidden
-          "
+          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
         >
           <div className="px-4 sm:px-6">
             <h2 className="text-3xl sm:text-4xl font-semibold mb-8">
               Protection Systems
             </h2>
-
             <div className="flex flex-col gap-6 sm:gap-10">
               {protectionProducts.map((product, index) => (
                 <div
                   key={index}
                   className="
-                  flex
-                  flex-col
-                  lg:flex-row
-                  gap-6
-                  bg-[#2d2d2d]
-                  rounded-md
-                  overflow-hidden
-                  shadow-md
+                    flex
+                    flex-col
+                    lg:flex-row
+                    gap-6
+                    bg-[#2d2d2d]
+                    rounded-xl
+                    overflow-hidden
+                    shadow-lg
+                    hover:-translate-y-1
+                    hover:shadow-2xl
+                    transition-all
+                    duration-300
                   "
                 >
                   {/* PRODUCT IMAGE */}
-
                   <div
                     className="
-                    flex
-                    items-center
-                    justify-center
-                    bg-[#3a3a3a]
-                    w-full
-                    h-[240px]
-                    sm:h-[280px]
-                    lg:w-[280px]
-                    lg:h-auto
-                    flex-shrink-0
-                    overflow-hidden
+                      flex
+                      items-center
+                      justify-center
+                      bg-[#3a3a3a]
+                      w-full
+                      h-[240px]
+                      sm:h-[280px]
+                      lg:w-[280px]
+                      lg:h-auto
+                      flex-shrink-0
+                      overflow-hidden
                     "
                   >
                     <img
                       src={product.image}
                       alt={product.title}
-                      className="
-                      w-full
-                      h-full
-                      object-cover
-                      object-center
-                      "
+                      className="w-full h-full object-cover object-center"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://placehold.co/400x300?text=No+Image";
+                      }}
                     />
                   </div>
 
                   {/* PRICE TABLE */}
-
                   <div className="flex-1 p-4 sm:p-6 overflow-x-auto">
                     <table className="w-full text-xs sm:text-sm min-w-[300px]">
                       <thead>
@@ -1574,6 +2133,7 @@ export default function Products({ addToCart }) {
                             </td>
                             <td className="py-3 px-3 sm:px-4 text-center">
                               <button
+                                aria-label={`Add ${variant.name} to cart`}
                                 onClick={() =>
                                   addToCart({
                                     image: product.image,
@@ -1583,18 +2143,23 @@ export default function Products({ addToCart }) {
                                   })
                                 }
                                 className="
-                                bg-red-500
-                                text-white
-                                px-3
-                                sm:px-4
-                                py-1
-                                sm:py-2
-                                rounded-full
-                                text-xs
-                                sm:text-sm
-                                hover:bg-red-600
-                                transition
-                                whitespace-nowrap
+                                  bg-red-500
+                                  text-white
+                                  px-3
+                                  sm:px-4
+                                  py-1
+                                  sm:py-2
+                                  rounded-full
+                                  text-xs
+                                  sm:text-sm
+                                  hover:bg-red-600
+                                  transition
+                                  whitespace-nowrap
+                                  focus:outline-none
+                                  focus:ring-2
+                                  focus:ring-red-400
+                                  min-h-[36px]
+                                  cursor-pointer
                                 "
                               >
                                 Add to Cart
@@ -1613,22 +2178,15 @@ export default function Products({ addToCart }) {
       )}
 
       {/* PLUMBING SECTION */}
-
       {selectedCategory === "plumbing" && (
         <section
           ref={plumbingRef}
-          className="
-          w-full
-          py-10
-          bg-[#d9d9d9]
-          overflow-hidden
-          "
+          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
         >
           <div className="px-4 sm:px-6">
             <h2 className="text-3xl sm:text-4xl font-semibold mb-8">
               Plumbing
             </h2>
-
             <div className="flex flex-col gap-6 sm:gap-10">
               {plumbingProducts.map((product, index) =>
                 renderProductCard(product, index, (p, spec) =>
@@ -1646,22 +2204,15 @@ export default function Products({ addToCart }) {
       )}
 
       {/* SWITCH / SURFACE BOX SECTION */}
-
       {selectedCategory === "switch" && (
         <section
           ref={switchRef}
-          className="
-          w-full
-          py-10
-          bg-[#d9d9d9]
-          overflow-hidden
-          "
+          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
         >
           <div className="px-4 sm:px-6">
             <h2 className="text-3xl sm:text-4xl font-semibold mb-8">
               Surface Box Collection
             </h2>
-
             <div className="flex flex-col gap-6 sm:gap-10">
               {switchProducts.map((product, index) =>
                 renderProductCard(product, index, (p, spec) =>
@@ -1679,180 +2230,165 @@ export default function Products({ addToCart }) {
       )}
 
       {/* ALL PRODUCTS */}
-
       {selectedCategory === "all" && (
         <>
           {/* PRODUCT DETAIL FULL VIEW */}
-
           {selectedProduct && (
-            <section
-              ref={detailRef}
-              className="
-              w-full
-              bg-[#efefef]
-              py-10
-              px-6
-              "
-            >
+            <section ref={detailRef} className="w-full bg-[#efefef] py-10 px-6">
               <div className="max-w-7xl mx-auto">
                 {/* BREADCRUMB */}
-
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-8">
                   <button
                     onClick={handleBack}
-                    className="
-                    hover:text-black
-                    transition
-                    "
+                    className="hover:text-black transition focus:outline-none focus:underline cursor-pointer"
                   >
                     All Products
                   </button>
-
                   <span>/</span>
-
                   <span className="text-black font-medium">
                     {selectedProduct.title}
                   </span>
                 </div>
 
                 {/* DETAIL CONTENT */}
-
                 <div className="flex flex-col gap-10 lg:flex-row">
                   {/* LEFT - THUMBNAILS + MAIN IMAGE */}
-
                   <div className="flex gap-4">
                     {/* THUMBNAILS */}
-
                     <div className="flex flex-col gap-3">
                       {[0, 1, 2, 3].map((i) => (
                         <div
                           key={i}
-                          className="
-                          w-16
-                          h-16
-                          bg-gray-200
-                          rounded-md
-                          border
-                          border-gray-300
-                          flex-shrink-0
-                          "
+                          className="w-16 h-16 bg-gray-200 rounded-md border border-gray-300 flex-shrink-0 cursor-pointer"
                         />
                       ))}
                     </div>
 
                     {/* MAIN IMAGE */}
-
                     <div
                       className="
-                      w-full
-                      max-w-[340px]
-                      h-[280px]
-                      sm:h-[340px]
-                      bg-gray-200
-                      rounded-md
-                      border
-                      border-gray-300
-                      flex
-                      items-center
-                      justify-center
+                        w-full
+                        max-w-[340px]
+                        h-[280px]
+                        sm:h-[340px]
+                        bg-gray-200
+                        rounded-xl
+                        border
+                        border-gray-300
+                        flex
+                        items-center
+                        justify-center
+                        overflow-hidden
                       "
                     >
                       <img
                         src={selectedProduct.image}
                         alt={selectedProduct.title}
-                        className="
-                        w-full
-                        h-full
-                        object-contain
-                        p-4
-                        "
+                        className="w-full h-full object-contain p-4"
+                        onError={(e) => {
+                          e.target.src =
+                            "https://placehold.co/400x400?text=No+Image";
+                        }}
                       />
                     </div>
                   </div>
 
                   {/* RIGHT - PRODUCT INFO */}
-
                   <div className="flex-1">
                     <h2 className="text-2xl font-bold mb-2">
                       {selectedProduct.title}
                     </h2>
 
                     {/* RATING */}
-
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="flex text-yellow-400 text-lg">★★★★☆</div>
-
+                    <div className="flex items-center gap-2 mb-2">
+                      <div
+                        className="flex text-yellow-400 text-lg"
+                        aria-label="4 out of 5 stars"
+                      >
+                        ★★★★☆
+                      </div>
                       <span className="text-sm text-gray-500">
                         4 (128 Review)
                       </span>
                     </div>
 
-                    {/* SPECS */}
+                    {/* STOCK BADGE */}
+                    {selectedProduct.inStock !== undefined && (
+                      <span
+                        className={`inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4 ${selectedProduct.inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                      >
+                        {selectedProduct.inStock
+                          ? "✓ In Stock"
+                          : "✗ Out of Stock"}
+                      </span>
+                    )}
 
+                    {/* SPECS */}
                     <div className="space-y-1 text-gray-700 mb-4">
                       <p>
                         <span className="font-semibold">Size:</span>{" "}
                         {selectedProduct?.size || "19MM"}
                       </p>
-
                       <p>
                         <span className="font-semibold">Length:</span> 20ft
                       </p>
-
                       <p>
                         <span className="font-semibold">Code:</span> CF 001
                       </p>
-
                       <p>
                         <span className="font-semibold">Colour:</span> Green
                       </p>
-
                       <p>
                         <span className="font-semibold">Material:</span> PVC
                       </p>
                     </div>
 
                     {/* PRICE + BUTTONS */}
-
                     <div className="flex flex-wrap items-center gap-6 mb-6">
                       <span className="text-2xl font-bold">
-                        ₹67.00
+                        ₹{selectedProduct.price || "67.00"}
                         <span className="text-sm font-normal text-gray-500">
                           /piece
                         </span>
                       </span>
-
                       <div className="flex flex-col gap-2">
-                        {/* DETAIL VIEW - ADD TO CART */}
-
                         <button
                           onClick={() => addToCart(selectedProduct)}
                           className="
-                          bg-red-500
-                          text-white
-                          px-6
-                          py-2
-                          rounded-full
-                          text-sm
-                          hover:bg-red-600
-                          transition
+                            bg-red-500
+                            text-white
+                            px-6
+                            py-2
+                            rounded-full
+                            text-sm
+                            hover:bg-red-600
+                            transition
+                            focus:outline-none
+                            focus:ring-2
+                            focus:ring-red-400
+                            min-h-[44px]
+                            cursor-pointer
                           "
                         >
                           Add to Cart
                         </button>
-
                         <button
                           className="
-                          border
-                          border-red-500
-                          text-red-500
-                          px-6
-                          py-2
-                          rounded-full
-                          text-sm
-                          hover:bg-red-500
-                          hover:text-white
-                          transition
+                            border
+                            border-red-500
+                            text-red-500
+                            px-6
+                            py-2
+                            rounded-full
+                            text-sm
+                            hover:bg-red-500
+                            hover:text-white
+                            transition
+                            focus:outline-none
+                            focus:ring-2
+                            focus:ring-red-400
+                            min-h-[44px]
+                            cursor-pointer
                           "
                         >
                           Request Quote
@@ -1861,44 +2397,25 @@ export default function Products({ addToCart }) {
                     </div>
 
                     {/* COLOR SWATCHES */}
-
                     <div className="flex gap-3 mb-6">
                       <button
+                        aria-label="Select green colour"
                         onClick={() => setSelectedColor("green")}
-                        className={`
-                        w-8
-                        h-8
-                        rounded-full
-                        bg-green-600
-                        ${selectedColor === "green" ? "ring-2 ring-offset-2 ring-green-600" : ""}
-                        `}
+                        className={`w-8 h-8 rounded-full bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 cursor-pointer ${selectedColor === "green" ? "ring-2 ring-offset-2 ring-green-600" : ""}`}
                       />
-
                       <button
+                        aria-label="Select black colour"
                         onClick={() => setSelectedColor("black")}
-                        className={`
-                        w-8
-                        h-8
-                        rounded-full
-                        bg-black
-                        ${selectedColor === "black" ? "ring-2 ring-offset-2 ring-black" : ""}
-                        `}
+                        className={`w-8 h-8 rounded-full bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black cursor-pointer ${selectedColor === "black" ? "ring-2 ring-offset-2 ring-black" : ""}`}
                       />
-
                       <button
+                        aria-label="Select purple colour"
                         onClick={() => setSelectedColor("purple")}
-                        className={`
-                        w-8
-                        h-8
-                        rounded-full
-                        bg-purple-600
-                        ${selectedColor === "purple" ? "ring-2 ring-offset-2 ring-purple-600" : ""}
-                        `}
+                        className={`w-8 h-8 rounded-full bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600 cursor-pointer ${selectedColor === "purple" ? "ring-2 ring-offset-2 ring-purple-600" : ""}`}
                       />
                     </div>
 
                     {/* TABS */}
-
                     <div className="border-b border-gray-300 mb-4 overflow-x-auto no-scrollbar">
                       <div className="flex gap-4 min-w-max">
                         {[
@@ -1911,17 +2428,15 @@ export default function Products({ addToCart }) {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`
-                            pb-2
-                            text-sm
-                            font-medium
-                            border-b-2
-                            transition
-                            whitespace-nowrap
-                            ${
-                              activeTab === tab
-                                ? "border-red-500 text-red-500"
-                                : "border-transparent text-gray-500 hover:text-black"
-                            }
+                              pb-2
+                              text-sm
+                              font-medium
+                              border-b-2
+                              transition
+                              whitespace-nowrap
+                              focus:outline-none
+                              cursor-pointer
+                              ${activeTab === tab ? "border-red-500 text-red-500" : "border-transparent text-gray-500 hover:text-black"}
                             `}
                           >
                             {tab}
@@ -1931,7 +2446,6 @@ export default function Products({ addToCart }) {
                     </div>
 
                     {/* TAB CONTENT - SPECIFICATIONS */}
-
                     {activeTab === "Specifications" && (
                       <table className="w-full text-sm border border-gray-200">
                         <tbody>
@@ -1951,7 +2465,6 @@ export default function Products({ addToCart }) {
                               <td className="py-2 px-3 text-gray-600 bg-gray-50 w-1/2">
                                 {row.label}
                               </td>
-
                               <td className="py-2 px-3">{row.value}</td>
                             </tr>
                           ))}
@@ -1959,24 +2472,16 @@ export default function Products({ addToCart }) {
                       </table>
                     )}
 
-                    {/* TAB CONTENT - DATASHEETS */}
-
                     {activeTab === "Datasheets" && (
                       <div className="text-sm text-gray-600 py-4">
                         Datasheet content will be available here.
                       </div>
                     )}
-
-                    {/* TAB CONTENT - CERTIFICATIONS */}
-
                     {activeTab === "Certifications" && (
                       <div className="text-sm text-gray-600 py-4">
                         Certification details will be available here.
                       </div>
                     )}
-
-                    {/* TAB CONTENT - APPLICATIONS */}
-
                     {activeTab === "Applications" && (
                       <div className="text-sm text-gray-600 py-4">
                         Application details will be available here.
@@ -1986,50 +2491,48 @@ export default function Products({ addToCart }) {
                 </div>
 
                 {/* RELATED PRODUCTS */}
-
                 <div className="mt-16">
                   <h3 className="text-3xl font-bold mb-8">Related Products</h3>
-
                   <div className="relative flex items-center justify-center w-full">
-                    {/* LEFT BUTTON */}
-
                     <button
+                      aria-label="Previous related products"
                       className="
-                      absolute
-                      left-0
-                      z-20
-                      w-10
-                      h-10
-                      rounded-full
-                      bg-white
-                      border
-                      border-gray-300
-                      shadow-md
-                      flex
-                      items-center
-                      justify-center
-                      hover:bg-gray-100
-                      transition
-                      cursor-pointer
+                        absolute
+                        left-0
+                        z-20
+                        w-10
+                        h-10
+                        rounded-full
+                        bg-white
+                        border
+                        border-gray-300
+                        shadow-md
+                        flex
+                        items-center
+                        justify-center
+                        hover:bg-gray-100
+                        transition
+                        cursor-pointer
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-gray-400
                       "
                     >
                       ‹
                     </button>
 
-                    {/* PRODUCTS */}
-
                     <div
                       className="
-                      flex
-                      items-start
-                      justify-center
-                      gap-6
-                      overflow-x-auto
-                      no-scrollbar
-                      w-full
-                      px-16
-                      py-2
-                      scroll-smooth
+                        flex
+                        items-start
+                        justify-center
+                        gap-6
+                        overflow-x-auto
+                        no-scrollbar
+                        w-full
+                        px-16
+                        py-2
+                        scroll-smooth
                       "
                     >
                       {relatedProducts.map((item, index) => (
@@ -2037,94 +2540,75 @@ export default function Products({ addToCart }) {
                           key={index}
                           onClick={() => handleViewDetails(item)}
                           className="
-                          min-w-[170px]
-                          max-w-[170px]
-                          flex
-                          flex-col
-                          items-center
-                          text-center
-                          cursor-pointer
-                          group
+                            min-w-[170px]
+                            max-w-[170px]
+                            flex
+                            flex-col
+                            items-center
+                            text-center
+                            cursor-pointer
+                            group
                           "
                         >
-                          {/* IMAGE */}
-
                           <div
                             className="
-                            w-[170px]
-                            h-[150px]
-                            bg-[#e5e5e5]
-                            rounded-md
-                            border
-                            border-gray-300
-                            flex
-                            items-center
-                            justify-center
-                            overflow-hidden
-                            transition
-                            duration-300
-                            group-hover:shadow-xl
+                              w-[170px]
+                              h-[150px]
+                              bg-[#e5e5e5]
+                              rounded-xl
+                              border
+                              border-gray-300
+                              flex
+                              items-center
+                              justify-center
+                              overflow-hidden
+                              transition
+                              duration-300
+                              group-hover:shadow-xl
                             "
                           >
                             <img
                               src={item.image}
                               alt={item.title}
-                              className="
-                              w-full
-                              h-full
-                              object-contain
-                              p-3
-                              transition
-                              duration-300
-                              group-hover:scale-105
-                              "
+                              className="w-full h-full object-contain p-3 transition duration-300 group-hover:scale-105"
+                              onError={(e) => {
+                                e.target.src =
+                                  "https://placehold.co/200x200?text=No+Image";
+                              }}
                             />
                           </div>
-
-                          {/* TITLE */}
-
-                          <p
-                            className="
-                            mt-4
-                            text-lg
-                            font-medium
-                            leading-snug
-                            transition
-                            group-hover:text-red-500
-                            "
-                          >
+                          <p className="mt-4 text-lg font-medium leading-snug transition group-hover:text-red-500">
                             {item.title}
                           </p>
-
-                          {/* PRICE */}
-
                           <p className="text-gray-600 text-lg mt-1">
-                            {item.price || "₹67.00"}
+                            ₹{item.price || "67.00"}
                           </p>
                         </div>
                       ))}
                     </div>
 
-                    {/* RIGHT BUTTON */}
-
                     <button
+                      aria-label="Next related products"
                       className="
-                      absolute
-                      right-0
-                      z-20
-                      w-10
-                      h-10
-                      rounded-full
-                      bg-white
-                      border
-                      border-gray-300
-                      shadow-md
-                      flex
-                      items-center
-                      justify-center
-                      hover:bg-gray-100
-                      transition
-                      cursor-pointer
+                        absolute
+                        right-0
+                        z-20
+                        w-10
+                        h-10
+                        rounded-full
+                        bg-white
+                        border
+                        border-gray-300
+                        shadow-md
+                        flex
+                        items-center
+                        justify-center
+                        hover:bg-gray-100
+                        transition
+                        cursor-pointer
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-gray-400
                       "
                     >
                       ›
@@ -2136,52 +2620,45 @@ export default function Products({ addToCart }) {
           )}
 
           {/* ALL PRODUCTS GRID VIEW */}
-
           {!selectedProduct && (
-            <section
-              className="
-              w-full
-              bg-[#efefef]
-              py-10
-              "
-            >
+            <section className="w-full bg-[#efefef] py-10">
               {/* TOP IMAGE */}
-
               <div className="px-6 mb-10">
                 <img
                   src={allProductsTop}
                   alt="All Products"
-                  className="
-                  w-full
-                  rounded-md
-                  shadow-lg
-                  "
+                  className="w-full rounded-xl shadow-lg"
                 />
               </div>
 
               {/* PRODUCTS */}
-
               <div className="max-w-7xl mx-auto flex flex-col gap-6 px-6 lg:flex-row">
                 {/* MOBILE FILTER TOGGLE */}
-
                 <div className="lg:hidden">
                   <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
+                    aria-expanded={sidebarOpen}
+                    aria-controls="filter-panel"
                     className="
-                    flex
-                    items-center
-                    gap-2
-                    bg-white
-                    border
-                    border-gray-300
-                    px-4
-                    py-2
-                    rounded-md
-                    shadow-sm
-                    text-sm
-                    font-semibold
-                    w-full
-                    justify-between
+                      flex
+                      items-center
+                      gap-2
+                      bg-white
+                      border
+                      border-gray-300
+                      px-4
+                      py-2
+                      rounded-xl
+                      shadow-sm
+                      text-sm
+                      font-semibold
+                      w-full
+                      justify-between
+                      focus:outline-none
+                      focus:ring-2
+                      focus:ring-red-400
+                      min-h-[44px]
+                      cursor-pointer
                     "
                   >
                     <span>Filters & Categories</span>
@@ -2189,475 +2666,360 @@ export default function Products({ addToCart }) {
                   </button>
                 </div>
 
-                {/* SIDEBAR */}
-
-                <div
-                  className={`
-                  w-full
-                  lg:w-[260px]
-                  bg-white
-                  p-5
-                  rounded-md
-                  shadow-md
-                  h-fit
-                  lg:block
-                  ${sidebarOpen ? "block" : "hidden"}
-                  `}
-                >
-                  <h2 className="text-xl font-bold mb-5">
-                    Product Catalog & Filters
-                  </h2>
-
-                  {/* CATEGORY */}
-
-                  <div className="mb-6">
-                    <h3 className="font-bold text-lg mb-3">
-                      Browse by Category
-                    </h3>
-
-                    {/* PIPE TYPE */}
-
-                    <div className="mb-5">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-semibold">Pipe Type</h4>
-
-                        <span>⌃</span>
-                      </div>
-
-                      <ul className="space-y-1 text-gray-700 text-sm pl-4">
-                        <li>• PVC Pipes</li>
-                        <li>• UPVC Pipes</li>
-                        <li>• CPVC Pipes</li>
-                        <li>• HDPE Pipes</li>
-                      </ul>
-                    </div>
-
-                    {/* DIAMETER */}
-
-                    <div className="mb-5">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-semibold">Diameter</h4>
-
-                        <span>⌃</span>
-                      </div>
-
-                      <ul className="space-y-1 text-gray-700 text-sm pl-4">
-                        <li>• 1/2 inch</li>
-                        <li>• 1 inch</li>
-                        <li>• 2 inch</li>
-                        <li>• 4 inch</li>
-                        <li>• 6+ inch</li>
-                      </ul>
-                    </div>
-
-                    {/* SCHEDULE */}
-
-                    <div className="mb-5">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-semibold">Schedule</h4>
-
-                        <span>⌃</span>
-                      </div>
-
-                      <ul className="space-y-1 text-gray-700 text-sm pl-4">
-                        <li>• Schedule 40</li>
-                        <li>• Schedule 80</li>
-                        <li>• Metric</li>
-                      </ul>
-                    </div>
-
-                    {/* MATERIAL */}
-
-                    <div className="mb-5">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-semibold">Material</h4>
-
-                        <span>⌃</span>
-                      </div>
-
-                      <ul className="space-y-1 text-gray-700 text-sm pl-4">
-                        <li>• PVC</li>
-                        <li>• UPVC</li>
-                        <li>• CPVC</li>
-                      </ul>
-                    </div>
-
-                    {/* FITTINGS */}
-
-                    <div className="mb-5">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-semibold">Fittings</h4>
-
-                        <span>⌄</span>
-                      </div>
-
-                      <ul className="space-y-1 text-gray-700 text-sm pl-4">
-                        <li>• Elbows</li>
-                        <li>• Tees</li>
-                        <li>• Couplings</li>
-                        <li>• Flanges</li>
-                      </ul>
-                    </div>
-
-                    {/* REFINE SEARCH */}
-
-                    <div className="mt-8">
-                      <h3 className="font-bold text-lg mb-4">Refine Search</h3>
-
-                      {/* SIZE */}
-
-                      <div className="mb-6">
-                        <h4 className="font-semibold mb-2">Size Range (mm)</h4>
-
-                        <input type="range" className="w-full" />
-
-                        <div className="flex gap-2 mt-2">
-                          <input
-                            type="text"
-                            className="
-                            w-full
-                            border
-                            rounded
-                            px-2
-                            py-1
-                            text-sm
-                            "
-                          />
-
-                          <input
-                            type="text"
-                            className="
-                            w-full
-                            border
-                            rounded
-                            px-2
-                            py-1
-                            text-sm
-                            "
-                          />
-                        </div>
-                      </div>
-
-                      {/* MATERIAL */}
-
-                      <div className="mb-6">
-                        <h4 className="font-semibold mb-2">Material</h4>
-
-                        <div className="space-y-1 text-sm">
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            PVC
-                          </label>
-
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            UPVC
-                          </label>
-
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            CPVC
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* APPLICATION */}
-
-                      <div className="mb-6">
-                        <h4 className="font-semibold mb-2">Application</h4>
-
-                        <div className="space-y-1 text-sm">
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            Plumbing
-                          </label>
-
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            Irrigation
-                          </label>
-
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            Industrial
-                          </label>
-
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            Drainage
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* PRICE */}
-
-                      <div className="mb-6">
-                        <h4 className="font-semibold mb-2">Price Range ($)</h4>
-
-                        <input type="range" className="w-full" />
-
-                        <div className="flex gap-2 mt-2">
-                          <input
-                            type="text"
-                            className="
-                            w-full
-                            border
-                            rounded
-                            px-2
-                            py-1
-                            text-sm
-                            "
-                          />
-
-                          <input
-                            type="text"
-                            className="
-                            w-full
-                            border
-                            rounded
-                            px-2
-                            py-1
-                            text-sm
-                            "
-                          />
-                        </div>
-                      </div>
-
-                      {/* CERTIFICATION */}
-
-                      <div>
-                        <h4 className="font-semibold mb-2">Certification</h4>
-
-                        <div className="space-y-1 text-sm">
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            ISO
-                          </label>
-
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            ASTM
-                          </label>
-
-                          <label className="flex items-center gap-2">
-                            <input type="checkbox" />
-                            NSF
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                {/* SIDEBAR — replaced with FilterPanel */}
+                <div id="filter-panel">
+                  <FilterPanel />
                 </div>
 
                 {/* PRODUCT GRID */}
-
-                <div className="flex-1">
-                  <h2 ref={allProductsRef} className="text-4xl font-bold mb-8">
-                    All Products
-                  </h2>
-
-                  <div
-                    className="
-                    grid
-                    grid-cols-1
-                    sm:grid-cols-2
-                    lg:grid-cols-3
-                    gap-6
-                    "
-                  >
-                    {getCurrentPageProducts().map((item, index) => (
-                      <div
-                        key={index}
-                        className="
-                        bg-white
-                        rounded-md
-                        overflow-hidden
-                        shadow-md
-                        border
-                        "
-                      >
-                        <div className="bg-black">
-                          <img
-                            src={item.image}
-                            alt={item.title}
-                            className="
-                            w-full
-                            h-[260px]
-                            object-contain
-                            "
-                          />
-                        </div>
-
-                        <div className="p-4">
-                          <h3 className="text-xl font-bold mb-3">
-                            {item.title}
-                          </h3>
-
-                          <div className="space-y-1 text-gray-700">
-                            <p>
-                              <span className="font-semibold">Size:</span> 19MM
-                            </p>
-                            <p>
-                              <span className="font-semibold">Length:</span>{" "}
-                              20ft
-                            </p>
-                            <p>
-                              <span className="font-semibold">Code:</span> CF001
-                            </p>
-                            <p>
-                              <span className="font-semibold">Colour:</span>{" "}
-                              Green
-                            </p>
-                            <p>
-                              <span className="font-semibold">Material:</span>{" "}
-                              PVC
-                            </p>
-                          </div>
-
-                          <div className="flex gap-2 mt-5 flex-wrap">
-                            <button
-                              onClick={() => handleViewDetails(item)}
-                              className="
-                              border
-                              border-red-500
-                              text-red-500
-                              px-3
-                              py-1
-                              rounded-full
-                              text-sm
-                              hover:bg-red-500
-                              hover:text-white
-                              transition
-                              "
-                            >
-                              View Details
-                            </button>
-
-                            <button
-                              className="
-                              border
-                              border-red-500
-                              text-red-500
-                              px-3
-                              py-1
-                              rounded-full
-                              text-sm
-                              hover:bg-red-500
-                              hover:text-white
-                              transition
-                              "
-                            >
-                              Add to Quote
-                            </button>
-
-                            {/* GRID - ADD TO CART */}
-
-                            <button
-                              onClick={() => addToCart(item)}
-                              className="
-                              bg-red-500
-                              text-white
-                              px-3
-                              py-1
-                              rounded-full
-                              text-sm
-                              hover:bg-red-600
-                              transition
-                              "
-                            >
-                              Add to Cart
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
+                    <h2 ref={allProductsRef} className="text-4xl font-bold">
+                      All Products
+                    </h2>
+                    <span className="text-sm text-gray-500">
+                      {filteredAndSortedProducts.length} product
+                      {filteredAndSortedProducts.length !== 1 ? "s" : ""} found
+                    </span>
                   </div>
+
+                  {isLoading ? (
+                    /* ── CHANGED: 4-col grid for skeletons matching product grid ── */
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <SkeletonCard key={i} />
+                      ))}
+                    </div>
+                  ) : filteredAndSortedProducts.length === 0 ? (
+                    <div className="text-center py-20 text-gray-500">
+                      <svg
+                        className="w-16 h-16 mx-auto mb-4 text-gray-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.5"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      <p className="text-xl font-semibold mb-2">
+                        No products found
+                      </p>
+                      <p className="text-sm">Try adjusting your filters.</p>
+                    </div>
+                  ) : (
+                    /* ── CHANGED: 1 col mobile / 2 col tablet / 4 col desktop ── */
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {paginatedProducts.map((item, index) => (
+                        <div
+                          key={index}
+                          className="
+                            bg-white
+                            rounded-xl
+                            overflow-hidden
+                            shadow-md
+                            border
+                            border-gray-100
+                            hover:-translate-y-2
+                            hover:shadow-2xl
+                            transition-all
+                            duration-300
+                            group
+                            relative
+                            flex
+                            flex-col
+                          "
+                        >
+                          {/* WISHLIST */}
+                          <WishlistBtn
+                            productId={item.title}
+                            wishlisted={wishlist.includes(item.title)}
+                            onToggle={toggleWishlist}
+                          />
+
+                          {/* BADGES */}
+                          <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+                            {item.isNew && (
+                              <span className="bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                NEW
+                              </span>
+                            )}
+                            {!item.inStock && (
+                              <span className="bg-gray-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                OUT OF STOCK
+                              </span>
+                            )}
+                          </div>
+
+                          {/* IMAGE */}
+                          <div className="bg-gray-50 relative overflow-hidden">
+                            <img
+                              src={
+                                imgErrors[item.title]
+                                  ? "https://placehold.co/400x300?text=No+Image"
+                                  : item.image
+                              }
+                              alt={item.title}
+                              className="
+                                w-full
+                                h-[200px]
+                                object-contain
+                                p-3
+                                transition-transform
+                                duration-300
+                                group-hover:scale-105
+                              "
+                              onError={() => handleImgError(item.title)}
+                              loading="lazy"
+                            />
+                            {/* QUICK VIEW OVERLAY */}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                              <button
+                                onClick={() => setQuickViewProduct(item)}
+                                className="
+                                  bg-white
+                                  text-gray-800
+                                  text-xs
+                                  font-semibold
+                                  px-4
+                                  py-2
+                                  rounded-full
+                                  shadow-lg
+                                  hover:bg-red-500
+                                  hover:text-white
+                                  transition
+                                  focus:outline-none
+                                  focus:ring-2
+                                  focus:ring-red-400
+                                  cursor-pointer
+                                "
+                              >
+                                Quick View
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="p-3 flex flex-col flex-1">
+                            <h3 className="text-sm font-bold mb-1 leading-snug">
+                              {item.title}
+                            </h3>
+
+                            {/* RATING STARS */}
+                            <div className="flex items-center gap-0.5 mb-2">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <svg
+                                  key={i}
+                                  className={`w-3 h-3 ${i < item.rating ? "text-yellow-400" : "text-gray-300"}`}
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                  aria-hidden="true"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                              <span className="text-xs text-gray-400 ml-1">
+                                ({item.reviews})
+                              </span>
+                            </div>
+
+                            <div className="space-y-0.5 text-gray-600 text-xs mb-2">
+                              <p>
+                                <span className="font-semibold">Size:</span>{" "}
+                                19MM
+                              </p>
+                              <p>
+                                <span className="font-semibold">Code:</span>{" "}
+                                CF001
+                              </p>
+                              <p>
+                                <span className="font-semibold">Material:</span>{" "}
+                                PVC
+                              </p>
+                            </div>
+
+                            <div className="mt-auto">
+                              <p className="text-base font-bold text-gray-900 mb-2">
+                                ₹{item.price}.00
+                              </p>
+
+                              {/* ── CHANGED: 3 buttons — clean single row layout ── */}
+                              <div className="grid grid-cols-1 gap-1.5">
+                                <button
+                                  onClick={() => handleViewDetails(item)}
+                                  className="
+                                    w-full
+                                    border
+                                    border-gray-300
+                                    text-gray-600
+                                    px-2
+                                    py-1.5
+                                    rounded-lg
+                                    text-xs
+                                    font-medium
+                                    hover:border-red-400
+                                    hover:text-red-500
+                                    hover:bg-red-50
+                                    transition-all
+                                    duration-200
+                                    focus:outline-none
+                                    focus:ring-2
+                                    focus:ring-red-300
+                                    min-h-[36px]
+                                    cursor-pointer
+                                  "
+                                >
+                                  View Details
+                                </button>
+
+                                <button
+                                  className="
+                                    w-full
+                                    border
+                                    border-gray-300
+                                    text-gray-600
+                                    px-2
+                                    py-1.5
+                                    rounded-lg
+                                    text-xs
+                                    font-medium
+                                    hover:border-red-400
+                                    hover:text-red-500
+                                    hover:bg-red-50
+                                    transition-all
+                                    duration-200
+                                    focus:outline-none
+                                    focus:ring-2
+                                    focus:ring-red-300
+                                    min-h-[36px]
+                                    cursor-pointer
+                                  "
+                                >
+                                  Add to Quote
+                                </button>
+
+                                <button
+                                  onClick={() => addToCart(item)}
+                                  disabled={!item.inStock}
+                                  aria-label={`Add ${item.title} to cart`}
+                                  className="
+                                    w-full
+                                    bg-red-500
+                                    text-white
+                                    px-2
+                                    py-1.5
+                                    rounded-lg
+                                    text-xs
+                                    font-semibold
+                                    hover:bg-red-600
+                                    transition-all
+                                    duration-200
+                                    disabled:opacity-50
+                                    disabled:cursor-not-allowed
+                                    focus:outline-none
+                                    focus:ring-2
+                                    focus:ring-red-400
+                                    min-h-[36px]
+                                    cursor-pointer
+                                  "
+                                >
+                                  {item.inStock ? "Add to Cart" : "Unavailable"}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* PAGINATION */}
+                  {!isLoading && totalPages > 1 && (
+                    <div className="flex justify-center gap-2 mt-10 flex-wrap">
+                      <button
+                        onClick={() => {
+                          if (currentPage > 1)
+                            handlePageChange(currentPage - 1);
+                        }}
+                        disabled={currentPage === 1}
+                        aria-label="Previous page"
+                        className="
+                          w-12
+                          h-12
+                          border
+                          bg-white
+                          hover:bg-gray-200
+                          disabled:opacity-40
+                          disabled:cursor-not-allowed
+                          rounded-lg
+                          focus:outline-none
+                          focus:ring-2
+                          focus:ring-red-400
+                          min-h-[44px]
+                          min-w-[44px]
+                          cursor-pointer
+                        "
+                      >
+                        &lt;
+                      </button>
 
-                  <div className="flex justify-center gap-3 mt-10">
-                    {/* PREV BUTTON */}
+                      {Array.from({ length: totalPages }).map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handlePageChange(i + 1)}
+                          aria-label={`Page ${i + 1}`}
+                          aria-current={
+                            currentPage === i + 1 ? "page" : undefined
+                          }
+                          className={`
+                            w-12
+                            h-12
+                            border
+                            rounded-lg
+                            font-semibold
+                            focus:outline-none
+                            focus:ring-2
+                            focus:ring-red-400
+                            min-h-[44px]
+                            min-w-[44px]
+                            cursor-pointer
+                            ${currentPage === i + 1 ? "bg-red-500 text-white" : "bg-white hover:bg-gray-200"}
+                          `}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
 
-                    <button
-                      onClick={() => {
-                        if (currentPage > 1) handlePageChange(currentPage - 1);
-                      }}
-                      disabled={currentPage === 1}
-                      className="
-                      w-12
-                      h-12
-                      border
-                      bg-white
-                      hover:bg-gray-200
-                      disabled:opacity-40
-                      disabled:cursor-not-allowed
-                      "
-                    >
-                      &lt;
-                    </button>
-
-                    {/* PAGE 1 */}
-
-                    <button
-                      onClick={() => handlePageChange(1)}
-                      className={`
-                      w-12
-                      h-12
-                      border
-                      ${currentPage === 1 ? "bg-red-500 text-white" : "bg-white hover:bg-gray-200"}
-                      `}
-                    >
-                      1
-                    </button>
-
-                    {/* PAGE 2 */}
-
-                    <button
-                      onClick={() => handlePageChange(2)}
-                      className={`
-                      w-12
-                      h-12
-                      border
-                      ${currentPage === 2 ? "bg-red-500 text-white" : "bg-white hover:bg-gray-200"}
-                      `}
-                    >
-                      2
-                    </button>
-
-                    {/* PAGE 3 */}
-
-                    <button
-                      onClick={() => handlePageChange(3)}
-                      className={`
-                      w-12
-                      h-12
-                      border
-                      ${currentPage === 3 ? "bg-red-500 text-white" : "bg-white hover:bg-gray-200"}
-                      `}
-                    >
-                      3
-                    </button>
-
-                    {/* NEXT BUTTON */}
-
-                    <button
-                      onClick={() => {
-                        if (currentPage < 3) handlePageChange(currentPage + 1);
-                      }}
-                      disabled={currentPage === 3}
-                      className="
-                      w-12
-                      h-12
-                      border
-                      bg-white
-                      hover:bg-gray-200
-                      disabled:opacity-40
-                      disabled:cursor-not-allowed
-                      "
-                    >
-                      &gt;
-                    </button>
-                  </div>
+                      <button
+                        onClick={() => {
+                          if (currentPage < totalPages)
+                            handlePageChange(currentPage + 1);
+                        }}
+                        disabled={currentPage === totalPages}
+                        aria-label="Next page"
+                        className="
+                          w-12
+                          h-12
+                          border
+                          bg-white
+                          hover:bg-gray-200
+                          disabled:opacity-40
+                          disabled:cursor-not-allowed
+                          rounded-lg
+                          focus:outline-none
+                          focus:ring-2
+                          focus:ring-red-400
+                          min-h-[44px]
+                          min-w-[44px]
+                          cursor-pointer
+                        "
+                      >
+                        &gt;
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
