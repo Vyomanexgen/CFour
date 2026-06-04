@@ -233,6 +233,7 @@ export default function Products({ addToCart }) {
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [wishlist, setWishlist] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [wishlistOpen, setWishlistOpen] = useState(false);
   const [imgErrors, setImgErrors] = useState({});
 
   const [showDiameter, setShowDiameter] = useState(true);
@@ -958,7 +959,9 @@ export default function Products({ addToCart }) {
   ];
 
   /* ALL PRODUCTS DATA — enriched with filter fields */
+  /* ALL PRODUCTS DATA — enriched with filter fields */
   const allProductsRaw = [
+    /* PIPES & FITTINGS */
     {
       image: image1,
       title: "CFOUR PVC Pipes",
@@ -1127,6 +1130,350 @@ export default function Products({ addToCart }) {
       isNew: false,
       popularity: 72,
     },
+
+    /* LIGHTS */
+    {
+      image: lt1,
+      title: "Ceiling Light 8W",
+      price: 351,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 95,
+      isNew: false,
+      popularity: 88,
+    },
+    {
+      image: lt2,
+      title: "Surface Panel Light 15W",
+      price: 760,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 72,
+      isNew: false,
+      popularity: 82,
+    },
+    {
+      image: lt3,
+      title: "Round COB Spot Light 3W",
+      price: 200,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 5,
+      reviews: 110,
+      isNew: true,
+      popularity: 91,
+    },
+    {
+      image: lt4,
+      title: "Mini COB Spot Light 1W",
+      price: 136,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 88,
+      isNew: false,
+      popularity: 76,
+    },
+    {
+      image: lt5,
+      title: "Black COB Spot Light 1W",
+      price: 200,
+      brand: "CFOUR",
+      color: "black",
+      inStock: true,
+      rating: 4,
+      reviews: 60,
+      isNew: false,
+      popularity: 70,
+    },
+    {
+      image: lt6,
+      title: "Rose Gold COB Spot Light 3W",
+      price: 293,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 5,
+      reviews: 45,
+      isNew: true,
+      popularity: 65,
+    },
+    {
+      image: lt7,
+      title: "Spot Light Black 5W",
+      price: 398,
+      brand: "CFOUR",
+      color: "black",
+      inStock: true,
+      rating: 4,
+      reviews: 55,
+      isNew: false,
+      popularity: 68,
+    },
+    {
+      image: lt8,
+      title: "Double Colour Ceiling Light",
+      price: 258,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 78,
+      isNew: false,
+      popularity: 74,
+    },
+    {
+      image: lt9,
+      title: "LED Power Supply 60W",
+      price: 445,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 92,
+      isNew: false,
+      popularity: 80,
+    },
+    {
+      image: lt10,
+      title: "LED Strip Light 5Mts",
+      price: 936,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 5,
+      reviews: 130,
+      isNew: false,
+      popularity: 93,
+    },
+    {
+      image: lt11,
+      title: "Street Light 24W",
+      price: 842,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 67,
+      isNew: false,
+      popularity: 71,
+    },
+    {
+      image: lt12,
+      title: "Flood Light 50W",
+      price: 1521,
+      brand: "CFOUR",
+      color: "white",
+      inStock: false,
+      rating: 4,
+      reviews: 50,
+      isNew: false,
+      popularity: 66,
+    },
+    {
+      image: lt16,
+      title: "Bulkhead Light 20W",
+      price: 305,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 3,
+      reviews: 38,
+      isNew: false,
+      popularity: 55,
+    },
+    {
+      image: lt17,
+      title: "Rope Light WW",
+      price: 125,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 145,
+      isNew: false,
+      popularity: 87,
+    },
+
+    /* PROTECTION */
+    {
+      image: SpnDoor,
+      title: "4WAY SPN D/DOOR",
+      price: 1150,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 42,
+      isNew: false,
+      popularity: 60,
+    },
+    {
+      image: SpnDoor,
+      title: "8WAY SPN D/DOOR",
+      price: 1400,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 38,
+      isNew: false,
+      popularity: 58,
+    },
+    {
+      image: TpnDoor,
+      title: "4 TPN D/DOOR",
+      price: 2840,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 5,
+      reviews: 30,
+      isNew: false,
+      popularity: 62,
+    },
+    {
+      image: Basbar,
+      title: "63A BASBAR",
+      price: 4250,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 25,
+      isNew: false,
+      popularity: 55,
+    },
+    {
+      image: Basbar,
+      title: "100A BASBAR",
+      price: 6040,
+      brand: "CFOUR",
+      color: "white",
+      inStock: false,
+      rating: 4,
+      reviews: 20,
+      isNew: false,
+      popularity: 50,
+    },
+
+    /* PLUMBING */
+    {
+      image: teflonTapeImg,
+      title: "Teflon Tape",
+      price: 30,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 5,
+      reviews: 210,
+      isNew: false,
+      popularity: 96,
+    },
+    {
+      image: westPipeImg,
+      title: "West Pipe",
+      price: 89,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 88,
+      isNew: false,
+      popularity: 79,
+    },
+
+    /* SURFACE BOX / SWITCH */
+    {
+      image: surface1,
+      title: "CFOUR Spike 2Mtr",
+      price: 490,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 65,
+      isNew: false,
+      popularity: 72,
+    },
+    {
+      image: surface1,
+      title: "CFOUR Spike 5Mtr",
+      price: 590,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 48,
+      isNew: false,
+      popularity: 68,
+    },
+    {
+      image: surface2,
+      title: "MCB Junction Box 2Way",
+      price: 37,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 120,
+      isNew: false,
+      popularity: 84,
+    },
+    {
+      image: surface3,
+      title: "Surface Box 2 Module",
+      price: 53,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 95,
+      isNew: false,
+      popularity: 78,
+    },
+    {
+      image: surface3,
+      title: "Surface Box 4 Module",
+      price: 72,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 4,
+      reviews: 85,
+      isNew: true,
+      popularity: 76,
+    },
+    {
+      image: surface3,
+      title: "Surface Box 8 Module",
+      price: 122,
+      brand: "CFOUR",
+      color: "white",
+      inStock: true,
+      rating: 5,
+      reviews: 70,
+      isNew: false,
+      popularity: 73,
+    },
+    {
+      image: surface3,
+      title: "Surface Box 12 Module",
+      price: 134,
+      brand: "CFOUR",
+      color: "white",
+      inStock: false,
+      rating: 4,
+      reviews: 55,
+      isNew: false,
+      popularity: 67,
+    },
   ];
 
   /* ── FILTER + SORT LOGIC ── */
@@ -1152,7 +1499,7 @@ export default function Products({ addToCart }) {
   })();
 
   /* ── CHANGED: 6 → 8 items per page ── */
-  const ITEMS_PER_PAGE = 8;
+  const ITEMS_PER_PAGE = 12;
   const totalPages = Math.ceil(
     filteredAndSortedProducts.length / ITEMS_PER_PAGE,
   );
@@ -1612,6 +1959,192 @@ export default function Products({ addToCart }) {
           onClose={() => setQuickViewProduct(null)}
           onAddToCart={addToCart}
         />
+      )}
+
+      {/* WISHLIST DRAWER */}
+      {wishlist.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-40">
+          <button
+            onClick={() => setWishlistOpen(true)}
+            aria-label={`View wishlist (${wishlist.length} items)`}
+            className="
+        flex
+        items-center
+        gap-2
+        bg-white
+        border
+        border-red-200
+        shadow-xl
+        px-4
+        py-3
+        rounded-full
+        text-sm
+        font-semibold
+        text-red-500
+        hover:bg-red-50
+        transition-all
+        duration-200
+        cursor-pointer
+      "
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-5 h-5 fill-red-500 stroke-red-500"
+              strokeWidth="2"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            Wishlist ({wishlist.length})
+          </button>
+        </div>
+      )}
+
+      {/* WISHLIST MODAL */}
+      {wishlistOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setWishlistOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden"
+            style={{ maxHeight: "calc(100vh - 120px)", marginTop: "85px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* HEADER */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-xl font-bold">
+                My Wishlist
+                <span className="ml-2 text-sm font-normal text-gray-400">
+                  ({wishlist.length} item{wishlist.length !== 1 ? "s" : ""})
+                </span>
+              </h2>
+              <button
+                onClick={() => setWishlistOpen(false)}
+                aria-label="Close wishlist"
+                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* ITEMS */}
+            <div className="overflow-y-auto flex-1 px-6 py-4">
+              {wishlist.length === 0 ? (
+                <div className="text-center py-16 text-gray-400">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-16 h-16 mx-auto mb-4 fill-none stroke-gray-300"
+                    strokeWidth="1.5"
+                  >
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                  <p className="text-lg font-semibold">
+                    Your wishlist is empty
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {allProductsRaw
+                    .filter((p) => wishlist.includes(p.title))
+                    .map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex gap-3 bg-gray-50 rounded-xl p-3 border border-gray-100"
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-20 h-20 object-contain rounded-lg bg-white border border-gray-200 flex-shrink-0"
+                          onError={(e) => {
+                            e.target.src =
+                              "https://placehold.co/80x80?text=No+Image";
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold leading-snug mb-1 truncate">
+                            {item.title}
+                          </p>
+                          <p className="text-base font-bold text-gray-900 mb-2">
+                            ₹{item.price}.00
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                addToCart(item);
+                                toggleWishlist(item.title);
+                              }}
+                              disabled={!item.inStock}
+                              className="
+                          flex-1
+                          bg-red-500
+                          text-white
+                          py-1.5
+                          rounded-lg
+                          text-xs
+                          font-semibold
+                          hover:bg-red-600
+                          transition
+                          disabled:opacity-50
+                          disabled:cursor-not-allowed
+                          cursor-pointer
+                        "
+                            >
+                              {item.inStock ? "Add to Cart" : "Unavailable"}
+                            </button>
+                            <button
+                              onClick={() => toggleWishlist(item.title)}
+                              aria-label="Remove from wishlist"
+                              className="
+                          w-8
+                          h-8
+                          rounded-lg
+                          border
+                          border-gray-200
+                          flex
+                          items-center
+                          justify-center
+                          hover:bg-red-50
+                          hover:border-red-300
+                          transition
+                          cursor-pointer
+                          flex-shrink-0
+                        "
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="w-4 h-4 fill-red-400 stroke-red-400"
+                                strokeWidth="2"
+                              >
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* FOOTER */}
+            {wishlist.length > 0 && (
+              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                <button
+                  onClick={() => setWishlist([])}
+                  className="text-sm text-gray-400 hover:text-red-500 transition cursor-pointer"
+                >
+                  Clear all
+                </button>
+                <button
+                  onClick={() => setWishlistOpen(false)}
+                  className="bg-gray-100 text-gray-700 px-5 py-2 rounded-full text-sm font-medium hover:bg-gray-200 transition cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* HERO IMAGE */}
@@ -2357,47 +2890,47 @@ export default function Products({ addToCart }) {
                         <button
                           onClick={() => addToCart(selectedProduct)}
                           className="
-        bg-red-500
-        text-white
-        px-6
-        py-2
-        rounded-full
-        text-sm
-        font-semibold
-        hover:bg-red-600
-        transition
-        focus:outline-none
-        focus:ring-2
-        focus:ring-red-400
-        min-h-[44px]
-        cursor-pointer
-        w-full
-        sm:w-auto
-      "
+                          bg-red-500
+                          text-white
+                          px-6
+                          py-2
+                          rounded-full
+                          text-sm
+                          font-semibold
+                          hover:bg-red-600
+                          transition
+                          focus:outline-none
+                          focus:ring-2
+                          focus:ring-red-400
+                          min-h-[44px]
+                          cursor-pointer
+                          w-full
+                          sm:w-auto
+                        "
                         >
                           Add to Cart
                         </button>
                         <button
                           className="
-        border
-        border-red-500
-        text-red-500
-        px-6
-        py-2
-        rounded-full
-        text-sm
-        font-semibold
-        hover:bg-red-500
-        hover:text-white
-        transition
-        focus:outline-none
-        focus:ring-2
-        focus:ring-red-400
-        min-h-[44px]
-        cursor-pointer
-        w-full
-        sm:w-auto
-      "
+                          border
+                          border-red-500
+                          text-red-500
+                          px-6
+                          py-2
+                          rounded-full
+                          text-sm
+                          font-semibold
+                          hover:bg-red-500
+                          hover:text-white
+                          transition
+                          focus:outline-none
+                          focus:ring-2
+                          focus:ring-red-400
+                          min-h-[44px]
+                          cursor-pointer
+                          w-full
+                          sm:w-auto
+                        "
                         >
                           Request Quote
                         </button>
@@ -2504,44 +3037,50 @@ export default function Products({ addToCart }) {
                   <div className="relative flex items-center justify-center w-full">
                     <button
                       aria-label="Previous related products"
+                      onClick={() => {
+                        document
+                          .getElementById("related-scroll")
+                          .scrollBy({ left: -200, behavior: "smooth" });
+                      }}
                       className="
-                        absolute
-                        left-0
-                        z-20
-                        w-10
-                        h-10
-                        rounded-full
-                        bg-white
-                        border
-                        border-gray-300
-                        shadow-md
-                        flex
-                        items-center
-                        justify-center
-                        hover:bg-gray-100
-                        transition
-                        cursor-pointer
-                        focus:outline-none
-                        focus:ring-2
-                        focus:ring-gray-400
-                      "
+                      absolute
+                      left-0
+                      z-20
+                      w-10
+                      h-10
+                      rounded-full
+                      bg-white
+                      border
+                      border-gray-300
+                      shadow-md
+                      flex
+                      items-center
+                      justify-center
+                      hover:bg-gray-100
+                      transition
+                      cursor-pointer
+                      focus:outline-none
+                      focus:ring-2
+                      focus:ring-gray-400
+                    "
                     >
                       ‹
                     </button>
 
                     <div
+                      id="related-scroll"
                       className="
-                        flex
-                        items-start
-                        justify-center
-                        gap-6
-                        overflow-x-auto
-                        no-scrollbar
-                        w-full
-                        px-16
-                        py-2
-                        scroll-smooth
-                      "
+                      flex
+                      items-start
+                      justify-start
+                      gap-6
+                      overflow-x-auto
+                      no-scrollbar
+                      w-full
+                      px-16
+                      py-2
+                      scroll-smooth
+                    "
                     >
                       {relatedProducts.map((item, index) => (
                         <div
@@ -2597,27 +3136,32 @@ export default function Products({ addToCart }) {
 
                     <button
                       aria-label="Next related products"
+                      onClick={() => {
+                        document
+                          .getElementById("related-scroll")
+                          .scrollBy({ left: 200, behavior: "smooth" });
+                      }}
                       className="
-                        absolute
-                        right-0
-                        z-20
-                        w-10
-                        h-10
-                        rounded-full
-                        bg-white
-                        border
-                        border-gray-300
-                        shadow-md
-                        flex
-                        items-center
-                        justify-center
-                        hover:bg-gray-100
-                        transition
-                        cursor-pointer
-                        focus:outline-none
-                        focus:ring-2
-                        focus:ring-gray-400
-                      "
+                      absolute
+                      right-0
+                      z-20
+                      w-10
+                      h-10
+                      rounded-full
+                      bg-white
+                      border
+                      border-gray-300
+                      shadow-md
+                      flex
+                      items-center
+                      justify-center
+                      hover:bg-gray-100
+                      transition
+                      cursor-pointer
+                      focus:outline-none
+                      focus:ring-2
+                      focus:ring-gray-400
+                    "
                     >
                       ›
                     </button>
@@ -2694,7 +3238,7 @@ export default function Products({ addToCart }) {
                   {isLoading ? (
                     /* ── CHANGED: 4-col grid for skeletons matching product grid ── */
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {Array.from({ length: 8 }).map((_, i) => (
+                      {Array.from({ length: 12 }).map((_, i) => (
                         <SkeletonCard key={i} />
                       ))}
                     </div>
