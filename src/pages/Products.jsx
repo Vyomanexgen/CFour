@@ -1186,17 +1186,16 @@ export default function Products({ addToCart }) {
     setActiveTab("Specifications");
     setSelectedColor("green");
     setTimeout(() => {
-      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }, 100);
   };
 
   /* HANDLE BACK */
   const handleBack = () => {
     setSelectedProduct(null);
-    allProductsRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 50);
   };
 
   /* RELATED PRODUCTS */
@@ -2234,7 +2233,10 @@ export default function Products({ addToCart }) {
         <>
           {/* PRODUCT DETAIL FULL VIEW */}
           {selectedProduct && (
-            <section ref={detailRef} className="w-full bg-[#efefef] py-10 px-6">
+            <section
+              ref={detailRef}
+              className="w-full bg-[#efefef] pt-[120px] pb-10 px-6"
+            >
               <div className="max-w-7xl mx-auto">
                 {/* BREADCRUMB */}
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-8">
@@ -2344,52 +2346,58 @@ export default function Products({ addToCart }) {
                     </div>
 
                     {/* PRICE + BUTTONS */}
-                    <div className="flex flex-wrap items-center gap-6 mb-6">
-                      <span className="text-2xl font-bold">
+                    <div className="mb-6">
+                      <p className="text-2xl font-bold mb-3">
                         ₹{selectedProduct.price || "67.00"}
-                        <span className="text-sm font-normal text-gray-500">
+                        <span className="text-sm font-normal text-gray-500 ml-1">
                           /piece
                         </span>
-                      </span>
-                      <div className="flex flex-col gap-2">
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <button
                           onClick={() => addToCart(selectedProduct)}
                           className="
-                            bg-red-500
-                            text-white
-                            px-6
-                            py-2
-                            rounded-full
-                            text-sm
-                            hover:bg-red-600
-                            transition
-                            focus:outline-none
-                            focus:ring-2
-                            focus:ring-red-400
-                            min-h-[44px]
-                            cursor-pointer
-                          "
+        bg-red-500
+        text-white
+        px-6
+        py-2
+        rounded-full
+        text-sm
+        font-semibold
+        hover:bg-red-600
+        transition
+        focus:outline-none
+        focus:ring-2
+        focus:ring-red-400
+        min-h-[44px]
+        cursor-pointer
+        w-full
+        sm:w-auto
+      "
                         >
                           Add to Cart
                         </button>
                         <button
                           className="
-                            border
-                            border-red-500
-                            text-red-500
-                            px-6
-                            py-2
-                            rounded-full
-                            text-sm
-                            hover:bg-red-500
-                            hover:text-white
-                            transition
-                            focus:outline-none
-                            focus:ring-2
-                            focus:ring-red-400
-                            min-h-[44px]
-                            cursor-pointer
-                          "
+        border
+        border-red-500
+        text-red-500
+        px-6
+        py-2
+        rounded-full
+        text-sm
+        font-semibold
+        hover:bg-red-500
+        hover:text-white
+        transition
+        focus:outline-none
+        focus:ring-2
+        focus:ring-red-400
+        min-h-[44px]
+        cursor-pointer
+        w-full
+        sm:w-auto
+      "
                         >
                           Request Quote
                         </button>
@@ -2621,7 +2629,7 @@ export default function Products({ addToCart }) {
 
           {/* ALL PRODUCTS GRID VIEW */}
           {!selectedProduct && (
-            <section className="w-full bg-[#efefef] py-10">
+            <section className="w-full bg-[#efefef] pt-[105px] pb-10">
               {/* TOP IMAGE */}
               <div className="px-6 mb-10">
                 <img
