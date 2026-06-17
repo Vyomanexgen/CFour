@@ -290,7 +290,7 @@ export default function Navbar({ cartCount = 0 }) {
               <button
                 onClick={handleSearch}
                 aria-label="Submit search"
-                className="bg-black px-4 py-2.5 text-white hover:bg-gray-800 transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400"
+                className="cursor-pointer bg-black px-4 py-2.5 text-white hover:bg-gray-800 transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400"
               >
                 <Search size={18} />
               </button>
@@ -320,6 +320,7 @@ export default function Navbar({ cartCount = 0 }) {
                 focus:outline-none
                 focus:ring-2
                 focus:ring-gray-400
+                cursor-pointer
               "
             >
               <ShoppingCart
@@ -374,6 +375,7 @@ export default function Navbar({ cartCount = 0 }) {
                 focus:outline-none
                 focus:ring-2
                 focus:ring-gray-400
+                cursor-pointer
               "
             >
               <User size={16} />

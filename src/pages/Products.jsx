@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import heroImg from "../assets/products/hero.webp";
 import allProductsTop from "../assets/products/allProducts-top.webp";
@@ -53,7 +53,7 @@ import lt18 from "../assets/lights/image18.webp";
 import lt19 from "../assets/lights/image19.webp";
 import lt20 from "../assets/lights/image20.webp";
 import lt21 from "../assets/lights/image21.webp";
-import lt22 from "../assets/lights/image2.webp";
+import lt22 from "../assets/lights/image22.webp";
 import lt23 from "../assets/lights/image23.webp";
 import lt24 from "../assets/lights/image24.webp";
 import lt25 from "../assets/lights/image25.webp";
@@ -215,6 +215,7 @@ function QuickViewModal({ product, onClose, onAddToCart }) {
 
 export default function Products({ addToCart }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const selectedCategory = params.get("category") || "products";
 
@@ -2172,18 +2173,20 @@ export default function Products({ addToCart }) {
                 {pipeProducts.map((item, index) => (
                   <div
                     key={index}
+                    onClick={() => navigate("/products?category=pipes")}
                     className="
-                      min-w-[280px]
-                      bg-[#f5f5f5]
-                      rounded-xl
-                      p-5
-                      flex-shrink-0
-                      shadow-md
-                      hover:-translate-y-1
-                      hover:shadow-xl
-                      transition-all
-                      duration-300
-                    "
+            min-w-[280px]
+            bg-[#f5f5f5]
+            rounded-xl
+            p-5
+            flex-shrink-0
+            shadow-md
+            hover:-translate-y-1
+            hover:shadow-xl
+            transition-all
+            duration-300
+            cursor-pointer
+          "
                   >
                     <img
                       src={item.image}
@@ -2211,18 +2214,20 @@ export default function Products({ addToCart }) {
                 {lightProducts.map((item, index) => (
                   <div
                     key={index}
+                    onClick={() => navigate("/products?category=lights")}
                     className="
-                      min-w-[280px]
-                      bg-[#f5f5f5]
-                      rounded-xl
-                      p-5
-                      flex-shrink-0
-                      shadow-md
-                      hover:-translate-y-1
-                      hover:shadow-xl
-                      transition-all
-                      duration-300
-                    "
+            min-w-[280px]
+            bg-[#f5f5f5]
+            rounded-xl
+            p-5
+            flex-shrink-0
+            shadow-md
+            hover:-translate-y-1
+            hover:shadow-xl
+            transition-all
+            duration-300
+            cursor-pointer
+          "
                   >
                     <img
                       src={item.image}

@@ -27,7 +27,7 @@ function MarqueeSlider({
   const sizeClass =
     cardSize === "card"
       ? "h-[280px] w-[220px] sm:h-[320px] sm:w-[260px] md:h-[380px] md:w-[300px] lg:h-[420px] lg:w-[340px]"
-      : "h-[160px] w-[160px] sm:h-[200px] sm:w-[200px] md:h-[240px] md:w-[240px] lg:h-[280px] lg:w-[280px]";
+      : "h-[200px] w-[200px] sm:h-[260px] sm:w-[260px] md:h-[320px] md:w-[320px] lg:h-[380px] lg:w-[380px]";
 
   return (
     <div className="relative w-full overflow-hidden">
