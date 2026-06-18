@@ -213,6 +213,320 @@ function QuickViewModal({ product, onClose, onAddToCart }) {
   );
 }
 
+/* ── VARIANT DETAILS MODAL (size/spec dropdown) ── */
+function VariantDetailsModal({
+  groupTitle,
+  image,
+  variants,
+  onClose,
+  onAddToCart,
+}) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const selected = variants[selectedIndex];
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  const numericPrice =
+    parseFloat(String(selected.price).replace(/[^\d.]/g, "")) || 0;
+  const mrp = Math.round(numericPrice * 1.4);
+  const discount = mrp > 0 ? Math.round(((mrp - numericPrice) / mrp) * 100) : 0;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Details: ${groupTitle}`}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-pointer"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          aria-label="Close details"
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
+        >
+          ✕
+        </button>
+
+        <div className="bg-gray-50 rounded-xl mb-4 h-56 overflow-hidden">
+          <img
+            src={image}
+            alt={groupTitle}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.src = "https://placehold.co/400x300?text=No+Image";
+            }}
+          />
+        </div>
+
+        <h3 className="text-xl font-bold mb-3">{groupTitle}</h3>
+
+        {/* SIZE / SPEC DROPDOWN — only shown because variants.length > 1 (caller guarantees this) */}
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Select Size / Specification
+        </label>
+        <select
+          value={selectedIndex}
+          onChange={(e) => setSelectedIndex(Number(e.target.value))}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
+        >
+          {variants.map((v, i) => (
+            <option key={i} value={i}>
+              {v.description || v.name || v.label}
+              {v.packing ? ` (${v.packing})` : ""}
+            </option>
+          ))}
+        </select>
+
+        {selected.code && (
+          <p className="text-xs text-gray-500 mb-2">Code: {selected.code}</p>
+        )}
+
+        <div className="mb-2 flex items-baseline gap-2 flex-wrap">
+          <span className="text-2xl font-bold text-gray-900">
+            ₹{numericPrice.toLocaleString("en-IN")}
+          </span>
+          <span className="text-sm text-gray-400 line-through">
+            ₹{mrp.toLocaleString("en-IN")}
+          </span>
+          <span className="text-sm text-green-700 font-semibold">
+            ({discount}% off)
+          </span>
+        </div>
+
+        <p className="text-xs text-gray-600 mb-4">
+          {selected.packing ? `Packing: ${selected.packing} · ` : ""}
+          <span className="font-medium">FREE delivery</span> in 2-4 days
+        </p>
+
+        <div className="flex gap-3 mt-2">
+          <button
+            onClick={() => {
+              onAddToCart({
+                description:
+                  selected.description || selected.name || selected.label,
+                price: selected.price,
+                code: selected.code,
+                packing: selected.packing,
+              });
+              onClose();
+            }}
+            className="flex-1 bg-[#FFD814] hover:bg-[#F7CA00] text-black py-2 rounded-full text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-yellow-400 cursor-pointer"
+          >
+            Add to Cart
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 border border-gray-300 py-2 rounded-full text-sm font-semibold hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-gray-400 cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── AMAZON-STYLE GROUP CARD (one card per product, dropdown if multiple variants) ── */
+function AmazonStyleGroupCard({ image, title, variants, onAddToCart }) {
+  const [showDetails, setShowDetails] = useState(false);
+  const hasMultipleVariants = variants.length > 1;
+  const first = variants[0];
+
+  const numericPrice =
+    parseFloat(String(first.price).replace(/[^\d.]/g, "")) || 0;
+  const mrp = Math.round(numericPrice * 1.4);
+  const discount = mrp > 0 ? Math.round(((mrp - numericPrice) / mrp) * 100) : 0;
+  const displayDesc = first.description || first.name || first.label;
+
+  return (
+    <>
+      {showDetails && (
+        <VariantDetailsModal
+          groupTitle={title}
+          image={image}
+          variants={variants}
+          onClose={() => setShowDetails(false)}
+          onAddToCart={(picked) =>
+            onAddToCart({
+              image,
+              title: `${title} — ${picked.description}`,
+              price: picked.price,
+              code: picked.code,
+              packing: picked.packing,
+            })
+          }
+        />
+      )}
+
+      <div
+        className="
+          bg-white
+          rounded-xl
+          border
+          border-gray-200
+          shadow-sm
+          hover:shadow-lg
+          transition-all
+          duration-300
+          overflow-hidden
+          flex
+          flex-col
+          h-full
+        "
+      >
+        {/* IMAGE — fills the box */}
+        <div className="bg-[#3a3a3a] h-[200px] overflow-hidden">
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover object-center"
+            onError={(e) => {
+              e.target.src = "https://placehold.co/300x200?text=No+Image";
+            }}
+          />
+        </div>
+
+        {/* INFO */}
+        <div className="p-4 flex flex-col flex-1">
+          <h3 className="text-sm font-medium text-gray-900 leading-snug mb-1 line-clamp-2">
+            {hasMultipleVariants ? title : `${title} — ${displayDesc}`}
+          </h3>
+
+          {!hasMultipleVariants && first.code && (
+            <p className="text-xs text-gray-500 mb-2 line-clamp-1">
+              Code: {first.code}
+            </p>
+          )}
+
+          {hasMultipleVariants && (
+            <p className="text-xs text-gray-500 mb-2">
+              {variants.length} sizes available
+            </p>
+          )}
+
+          {/* RATING */}
+          <div className="flex items-center gap-1 mb-2">
+            <span className="flex items-center gap-0.5 bg-green-700 text-white text-[11px] font-semibold px-1.5 py-0.5 rounded">
+              4.0
+              <svg
+                className="w-2.5 h-2.5 fill-white ml-0.5"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            </span>
+            <span className="text-xs text-blue-600 underline">(50+)</span>
+          </div>
+
+          {/* PRICE */}
+          <div className="mb-1 flex items-baseline gap-2 flex-wrap">
+            <span className="text-lg font-bold text-gray-900">
+              {hasMultipleVariants ? "From " : ""}₹
+              {numericPrice.toLocaleString("en-IN")}
+            </span>
+            <span className="text-xs text-gray-400 line-through">
+              ₹{mrp.toLocaleString("en-IN")}
+            </span>
+            <span className="text-xs text-green-700 font-semibold">
+              ({discount}% off)
+            </span>
+          </div>
+
+          {/* DELIVERY INFO */}
+          <p className="text-xs text-gray-600 mb-3">
+            {first.packing && !hasMultipleVariants
+              ? `Packing: ${first.packing} · `
+              : ""}
+            <span className="text-gray-700 font-medium">FREE delivery</span>{" "}
+            <span className="text-gray-500">in 2-4 days</span>
+          </p>
+
+          {/* VIEW DETAILS — only if multiple variants exist */}
+          {hasMultipleVariants && (
+            <button
+              onClick={() => setShowDetails(true)}
+              className="
+                w-full
+                border
+                border-gray-300
+                text-gray-700
+                text-sm
+                font-medium
+                py-2
+                rounded-full
+                hover:bg-gray-50
+                hover:border-gray-400
+                transition
+                focus:outline-none
+                focus:ring-2
+                focus:ring-gray-300
+                min-h-[40px]
+                cursor-pointer
+                mb-2
+              "
+            >
+              View Details
+            </button>
+          )}
+
+          {/* CTA */}
+          <button
+            onClick={() => {
+              if (hasMultipleVariants) {
+                setShowDetails(true);
+              } else {
+                onAddToCart({
+                  image,
+                  title: `${title} — ${displayDesc}`,
+                  price: first.price,
+                  code: first.code,
+                  packing: first.packing,
+                });
+              }
+            }}
+            aria-label={`Add ${title} to cart`}
+            className="
+              mt-auto
+              w-full
+              bg-[#FFD814]
+              hover:bg-[#F7CA00]
+              text-black
+              text-sm
+              font-semibold
+              py-2
+              rounded-full
+              border
+              border-[#FCD200]
+              transition
+              focus:outline-none
+              focus:ring-2
+              focus:ring-yellow-400
+              min-h-[40px]
+              cursor-pointer
+            "
+          >
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function Products({ addToCart }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -959,7 +1273,6 @@ export default function Products({ addToCart }) {
     },
   ];
 
-  /* ALL PRODUCTS DATA — enriched with filter fields */
   /* ALL PRODUCTS DATA — enriched with filter fields */
   const allProductsRaw = [
     /* PIPES & FITTINGS */
@@ -1825,132 +2138,6 @@ export default function Products({ addToCart }) {
     </div>
   );
 
-  const renderProductCard = (product, index, onCartAdd) => (
-    <div
-      key={index}
-      className="
-        flex
-        flex-col
-        lg:flex-row
-        gap-0
-        bg-[#2d2d2d]
-        rounded-xl
-        overflow-hidden
-        shadow-lg
-        w-full
-        hover:-translate-y-1
-        hover:shadow-2xl
-        transition-all
-        duration-300
-      "
-    >
-      {/* IMAGE BOX */}
-      <div
-        className="
-          flex
-          items-center
-          justify-center
-          bg-[#3a3a3a]
-          w-full
-          h-[240px]
-          sm:h-[280px]
-          lg:w-[280px]
-          lg:h-auto
-          flex-shrink-0
-          overflow-hidden
-        "
-      >
-        <img
-          src={product.image}
-          alt={product.title}
-          className="w-full h-full object-cover object-center"
-          onError={(e) => {
-            e.target.src = "https://placehold.co/400x300?text=No+Image";
-          }}
-        />
-      </div>
-
-      {/* SPECS TABLE */}
-      <div className="flex-1 p-4 sm:p-6 overflow-x-auto">
-        <h3 className="text-white text-lg sm:text-xl font-bold mb-4 tracking-wide">
-          {product.title}
-        </h3>
-
-        <table className="w-full text-xs sm:text-sm min-w-[300px]">
-          <thead>
-            <tr className="border-b border-gray-500">
-              <th className="text-gray-400 text-left py-2 px-2 sm:px-3 font-medium whitespace-nowrap">
-                Code
-              </th>
-              <th className="text-gray-400 text-left py-2 px-2 sm:px-3 font-medium">
-                Description
-              </th>
-              <th className="text-gray-400 text-right py-2 px-2 sm:px-3 font-medium whitespace-nowrap">
-                Price
-              </th>
-              {product.specs[0]?.packing && (
-                <th className="text-gray-400 text-center py-2 px-2 sm:px-3 font-medium whitespace-nowrap">
-                  Packing
-                </th>
-              )}
-              <th className="text-gray-400 text-center py-2 px-2 sm:px-3 font-medium">
-                Cart
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {product.specs.map((spec, sIndex) => (
-              <tr
-                key={sIndex}
-                className="border-b border-gray-700 hover:bg-white/5 transition"
-              >
-                <td className="py-2 px-2 sm:px-3 text-gray-300 font-mono text-xs whitespace-nowrap">
-                  {spec.code}
-                </td>
-                <td className="py-2 px-2 sm:px-3 text-white font-medium">
-                  {spec.description}
-                </td>
-                <td className="py-2 px-2 sm:px-3 text-white text-right font-semibold whitespace-nowrap">
-                  ₹{spec.price}
-                </td>
-                {spec.packing && (
-                  <td className="py-2 px-2 sm:px-3 text-white text-center whitespace-nowrap">
-                    {spec.packing}
-                  </td>
-                )}
-                <td className="py-2 px-2 sm:px-3 text-center">
-                  <button
-                    aria-label={`Add ${spec.description} to cart`}
-                    onClick={() => onCartAdd(product, spec)}
-                    className="
-                      bg-red-500
-                      text-white
-                      px-2
-                      sm:px-3
-                      py-1
-                      rounded-full
-                      text-xs
-                      hover:bg-red-600
-                      transition
-                      whitespace-nowrap
-                      focus:outline-none
-                      focus:ring-2
-                      focus:ring-red-400
-                      min-h-[36px]
-                      cursor-pointer
-                    "
-                  >
-                    Add to Cart
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-
   return (
     <>
       {/* QUICK VIEW MODAL */}
@@ -2288,127 +2475,16 @@ export default function Products({ addToCart }) {
               PIPES & FITTINGS
             </h2>
 
-            <div className="flex flex-col gap-6 sm:gap-10">
+            {/* ── AMAZON-STYLE GRID — one card per product, dropdown for multiple specs ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {pipesFittingsProducts.map((product, index) => (
-                <div
+                <AmazonStyleGroupCard
                   key={index}
-                  className="
-                    flex
-                    flex-col
-                    lg:flex-row
-                    gap-0
-                    bg-[#2d2d2d]
-                    rounded-xl
-                    overflow-hidden
-                    shadow-lg
-                    hover:-translate-y-1
-                    hover:shadow-2xl
-                    transition-all
-                    duration-300
-                  "
-                >
-                  {/* PRODUCT IMAGE */}
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-center
-                      bg-[#3a3a3a]
-                      w-full
-                      h-[240px]
-                      sm:h-[280px]
-                      lg:w-[280px]
-                      lg:h-auto
-                      flex-shrink-0
-                      overflow-hidden
-                    "
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.title}
-                      className="w-full h-full object-cover object-center"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://placehold.co/400x300?text=No+Image";
-                      }}
-                    />
-                  </div>
-
-                  {/* SPECS TABLE */}
-                  <div className="flex-1 p-4 sm:p-6 overflow-x-auto">
-                    <h3 className="text-white text-lg sm:text-xl font-bold mb-4 tracking-wide">
-                      {product.title}
-                    </h3>
-                    <table className="w-full text-xs sm:text-sm min-w-[300px]">
-                      <thead>
-                        <tr className="border-b border-gray-500">
-                          <th className="text-gray-400 text-left py-2 px-2 sm:px-3 font-medium whitespace-nowrap">
-                            Code
-                          </th>
-                          <th className="text-gray-400 text-left py-2 px-2 sm:px-3 font-medium">
-                            Description
-                          </th>
-                          <th className="text-gray-400 text-right py-2 px-2 sm:px-3 font-medium whitespace-nowrap">
-                            Price
-                          </th>
-                          <th className="text-gray-400 text-center py-2 px-2 sm:px-3 font-medium">
-                            Cart
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {product.specs.map((spec, sIndex) => (
-                          <tr
-                            key={sIndex}
-                            className="border-b border-gray-700 hover:bg-white/5 transition"
-                          >
-                            <td className="py-2 px-2 sm:px-3 text-gray-300 font-mono text-xs whitespace-nowrap">
-                              {spec.code}
-                            </td>
-                            <td className="py-2 px-2 sm:px-3 text-white font-medium">
-                              {spec.description}
-                            </td>
-                            <td className="py-2 px-2 sm:px-3 text-white text-right font-semibold whitespace-nowrap">
-                              ₹{spec.price}
-                            </td>
-                            <td className="py-2 px-2 sm:px-3 text-center">
-                              <button
-                                aria-label={`Add ${spec.description} to cart`}
-                                onClick={() =>
-                                  addToCart({
-                                    image: product.image,
-                                    title: `${product.title} — ${spec.description}`,
-                                    price: spec.price,
-                                    code: spec.code,
-                                  })
-                                }
-                                className="
-                                  bg-red-500
-                                  text-white
-                                  px-2
-                                  sm:px-3
-                                  py-1
-                                  rounded-full
-                                  text-xs
-                                  hover:bg-red-600
-                                  transition
-                                  whitespace-nowrap
-                                  focus:outline-none
-                                  focus:ring-2
-                                  focus:ring-red-400
-                                  min-h-[36px]
-                                  cursor-pointer
-                                "
-                              >
-                                Add to Cart
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                  image={product.image}
+                  title={product.title}
+                  variants={product.specs}
+                  onAddToCart={addToCart}
+                />
               ))}
             </div>
           </div>
@@ -2457,125 +2533,27 @@ export default function Products({ addToCart }) {
               LIGHTS & ACCESSORIES
             </h2>
 
-            <div className="flex flex-col gap-6 sm:gap-10">
-              {lightsDetailedProducts.map((product, index) => (
-                <div
-                  key={index}
-                  className="
-                    flex
-                    flex-col
-                    lg:flex-row
-                    gap-0
-                    bg-[#2d2d2d]
-                    rounded-xl
-                    overflow-hidden
-                    shadow-lg
-                    hover:-translate-y-1
-                    hover:shadow-2xl
-                    transition-all
-                    duration-300
-                  "
-                >
-                  {/* PRODUCT IMAGE */}
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-center
-                      bg-[#3a3a3a]
-                      w-full
-                      h-[240px]
-                      sm:h-[280px]
-                      lg:w-[280px]
-                      lg:h-auto
-                      flex-shrink-0
-                      overflow-hidden
-                    "
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.title}
-                      className="w-full h-full object-cover object-center"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://placehold.co/400x300?text=No+Image";
-                      }}
-                    />
-                  </div>
-
-                  {/* SPECS TABLE */}
-                  <div className="flex-1 p-4 sm:p-6 overflow-x-auto">
-                    <h3 className="text-white text-lg sm:text-xl font-bold mb-4 tracking-wide">
-                      {product.title}
-                    </h3>
-                    <table className="w-full text-xs sm:text-sm min-w-[300px]">
-                      <thead>
-                        <tr className="border-b border-gray-500">
-                          {product.columns.map((col, cIndex) => (
-                            <th
-                              key={cIndex}
-                              className="text-gray-400 text-left py-2 px-2 sm:px-3 font-medium whitespace-nowrap"
-                            >
-                              {col}
-                            </th>
-                          ))}
-                          <th className="text-gray-400 text-center py-2 px-2 sm:px-3 font-medium whitespace-nowrap">
-                            Cart
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {product.rows.map((row, rIndex) => (
-                          <tr
-                            key={rIndex}
-                            className="border-b border-gray-700 hover:bg-white/5 transition"
-                          >
-                            {renderRow(row).map((cell, cIndex) => (
-                              <td
-                                key={cIndex}
-                                className="py-2 px-2 sm:px-3 text-white font-medium"
-                              >
-                                {cell}
-                              </td>
-                            ))}
-                            <td className="py-2 px-2 sm:px-3 text-center">
-                              <button
-                                aria-label={`Add ${product.title} to cart`}
-                                onClick={() =>
-                                  addToCart({
-                                    image: product.image,
-                                    title: `${product.title} — ${renderRow(row)[0]}`,
-                                    price: row.price || "",
-                                  })
-                                }
-                                className="
-                                  bg-red-500
-                                  text-white
-                                  px-2
-                                  sm:px-3
-                                  py-1
-                                  rounded-full
-                                  text-xs
-                                  hover:bg-red-600
-                                  transition
-                                  whitespace-nowrap
-                                  focus:outline-none
-                                  focus:ring-2
-                                  focus:ring-red-400
-                                  min-h-[36px]
-                                  cursor-pointer
-                                "
-                              >
-                                Add to Cart
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
+            {/* ── AMAZON-STYLE GRID — one card per product, dropdown for multiple rows ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {lightsDetailedProducts.map((product, index) => {
+                const normalizedVariants = product.rows.map((row) => ({
+                  label: renderRow(row)[0],
+                  description: product.columns
+                    .slice(0, -1)
+                    .map((col, i) => `${col}: ${renderRow(row)[i]}`)
+                    .join(" · "),
+                  price: row.price || "0",
+                }));
+                return (
+                  <AmazonStyleGroupCard
+                    key={index}
+                    image={product.image}
+                    title={product.title}
+                    variants={normalizedVariants}
+                    onAddToCart={addToCart}
+                  />
+                );
+              })}
             </div>
           </div>
         </section>
@@ -2591,124 +2569,25 @@ export default function Products({ addToCart }) {
             <h2 className="text-3xl sm:text-4xl font-semibold mb-8">
               Protection Systems
             </h2>
-            <div className="flex flex-col gap-6 sm:gap-10">
-              {protectionProducts.map((product, index) => (
-                <div
-                  key={index}
-                  className="
-                    flex
-                    flex-col
-                    lg:flex-row
-                    gap-6
-                    bg-[#2d2d2d]
-                    rounded-xl
-                    overflow-hidden
-                    shadow-lg
-                    hover:-translate-y-1
-                    hover:shadow-2xl
-                    transition-all
-                    duration-300
-                  "
-                >
-                  {/* PRODUCT IMAGE */}
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-center
-                      bg-[#3a3a3a]
-                      w-full
-                      h-[240px]
-                      sm:h-[280px]
-                      lg:w-[280px]
-                      lg:h-auto
-                      flex-shrink-0
-                      overflow-hidden
-                    "
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.title}
-                      className="w-full h-full object-cover object-center"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://placehold.co/400x300?text=No+Image";
-                      }}
-                    />
-                  </div>
 
-                  {/* PRICE TABLE */}
-                  <div className="flex-1 p-4 sm:p-6 overflow-x-auto">
-                    <table className="w-full text-xs sm:text-sm min-w-[300px]">
-                      <thead>
-                        <tr>
-                          <th className="bg-red-600 text-white text-center py-2 px-3 sm:px-4 font-semibold tracking-wider uppercase text-xs">
-                            NAME
-                          </th>
-                          <th className="bg-red-600 text-white text-center py-2 px-3 sm:px-4 font-semibold tracking-wider uppercase text-xs border-l border-red-500">
-                            PRICE
-                          </th>
-                          <th className="bg-red-600 text-white text-center py-2 px-3 sm:px-4 font-semibold tracking-wider uppercase text-xs border-l border-red-500">
-                            PACKING
-                          </th>
-                          <th className="bg-red-600 text-white text-center py-2 px-3 sm:px-4 font-semibold tracking-wider uppercase text-xs border-l border-red-500">
-                            CART
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {product.variants.map((variant, vIndex) => (
-                          <tr key={vIndex} className="border-b border-gray-600">
-                            <td className="py-3 px-3 sm:px-4 text-white text-center font-medium">
-                              {variant.name}
-                            </td>
-                            <td className="py-3 px-3 sm:px-4 text-white text-center">
-                              {variant.price}
-                            </td>
-                            <td className="py-3 px-3 sm:px-4 text-white text-center">
-                              {variant.packing}
-                            </td>
-                            <td className="py-3 px-3 sm:px-4 text-center">
-                              <button
-                                aria-label={`Add ${variant.name} to cart`}
-                                onClick={() =>
-                                  addToCart({
-                                    image: product.image,
-                                    title: variant.name,
-                                    price: variant.price,
-                                    packing: variant.packing,
-                                  })
-                                }
-                                className="
-                                  bg-red-500
-                                  text-white
-                                  px-3
-                                  sm:px-4
-                                  py-1
-                                  sm:py-2
-                                  rounded-full
-                                  text-xs
-                                  sm:text-sm
-                                  hover:bg-red-600
-                                  transition
-                                  whitespace-nowrap
-                                  focus:outline-none
-                                  focus:ring-2
-                                  focus:ring-red-400
-                                  min-h-[36px]
-                                  cursor-pointer
-                                "
-                              >
-                                Add to Cart
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
+            {/* ── AMAZON-STYLE GRID ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {protectionProducts.map((product, index) => {
+                const normalizedVariants = product.variants.map((v) => ({
+                  description: v.name,
+                  price: v.price,
+                  packing: v.packing,
+                }));
+                return (
+                  <AmazonStyleGroupCard
+                    key={index}
+                    image={product.image}
+                    title={product.title}
+                    variants={normalizedVariants}
+                    onAddToCart={addToCart}
+                  />
+                );
+              })}
             </div>
           </div>
         </section>
@@ -2724,17 +2603,18 @@ export default function Products({ addToCart }) {
             <h2 className="text-3xl sm:text-4xl font-semibold mb-8">
               Plumbing
             </h2>
-            <div className="flex flex-col gap-6 sm:gap-10">
-              {plumbingProducts.map((product, index) =>
-                renderProductCard(product, index, (p, spec) =>
-                  addToCart({
-                    image: p.image,
-                    title: `${p.title} — ${spec.description}`,
-                    price: spec.price,
-                    code: spec.code,
-                  }),
-                ),
-              )}
+
+            {/* ── AMAZON-STYLE GRID ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {plumbingProducts.map((product, index) => (
+                <AmazonStyleGroupCard
+                  key={index}
+                  image={product.image}
+                  title={product.title}
+                  variants={product.specs}
+                  onAddToCart={addToCart}
+                />
+              ))}
             </div>
           </div>
         </section>
@@ -2750,17 +2630,18 @@ export default function Products({ addToCart }) {
             <h2 className="text-3xl sm:text-4xl font-semibold mb-8">
               Surface Box Collection
             </h2>
-            <div className="flex flex-col gap-6 sm:gap-10">
-              {switchProducts.map((product, index) =>
-                renderProductCard(product, index, (p, spec) =>
-                  addToCart({
-                    image: p.image,
-                    title: `${p.title} — ${spec.description}`,
-                    price: spec.price,
-                    code: spec.code,
-                  }),
-                ),
-              )}
+
+            {/* ── AMAZON-STYLE GRID ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {switchProducts.map((product, index) => (
+                <AmazonStyleGroupCard
+                  key={index}
+                  image={product.image}
+                  title={product.title}
+                  variants={product.specs}
+                  onAddToCart={addToCart}
+                />
+              ))}
             </div>
           </div>
         </section>
