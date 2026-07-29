@@ -5,6 +5,18 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Cart from "./components/Cart";
 import LoginRegister from "./components/LoginRegister";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 // LAZY LOAD ALL PAGES
 const Home = lazy(() => import("./pages/Home"));
@@ -12,6 +24,11 @@ const About = lazy(() => import("./pages/About"));
 const Products = lazy(() => import("./pages/Products"));
 const NewArrivals = lazy(() => import("./pages/NewArrivals"));
 const Contact = lazy(() => import("./pages/Contact"));
+const MyOrders = lazy(() => import("./pages/MyOrders"));
+const OrderDetails = lazy(() => import("./pages/OrderDetails"));
+const AddressManagement = lazy(() => import("./pages/AddressManagement"));
+const Profile = lazy(() => import("./pages/Profile"));
+
 
 // SCROLL TO TOP ON EVERY ROUTE CHANGE
 function ScrollToTop() {
@@ -24,11 +41,14 @@ function ScrollToTop() {
   return null;
 }
 
-function Layout({ cartItems, setCartItems, addToCart }) {
+import { useCart } from "./context/CartContext";
+import { useAuth } from "./context/AuthContext";
+
+function Layout() {
   const location = useLocation();
+  const { cartItems } = useCart();
 
   const hideLayout = location.pathname === "/login";
-
   const cartCount = cartItems.reduce((sum, i) => sum + i.qty, 0);
 
   return (
@@ -38,7 +58,7 @@ function Layout({ cartItems, setCartItems, addToCart }) {
       {!hideLayout && <Navbar cartCount={cartCount} />}
 
       <Suspense
-        fallback={
+        fallback = {
           <div className="flex h-screen w-full items-center justify-center bg-black">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
           </div>
@@ -47,15 +67,52 @@ function Layout({ cartItems, setCartItems, addToCart }) {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
-          <Route path="/products" element={<Products addToCart={addToCart} />} />
+          <Route path="/products" element={<Products />} />
           <Route path="/new-arrivals" element={<NewArrivals />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<LoginRegister />} />
 
           <Route
             path="/cart"
-            element={<Cart cartItems={cartItems} setCartItems={setCartItems} />}
+            element={
+              <ProtectedRoute>
+                <Cart />
+              </ProtectedRoute>
+            }
           />
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <MyOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders/:orderId"
+            element={
+              <ProtectedRoute>
+                <OrderDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/addresses"
+            element={
+              <ProtectedRoute>
+                <AddressManagement />
+              </ProtectedRoute>
+            }
+          />
+
         </Routes>
       </Suspense>
 
@@ -65,27 +122,20 @@ function Layout({ cartItems, setCartItems, addToCart }) {
 }
 
 export default function App() {
-  const [cartItems, setCartItems] = useState([]);
+  const { user } = useAuth();
+  const { mergeGuestCart } = useCart();
 
-  const addToCart = (product) => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.title === product.title);
-      if (existing) {
-        return prev.map((i) =>
-          i.title === product.title ? { ...i, qty: i.qty + 1 } : i,
-        );
-      }
-      return [...prev, { ...product, qty: 1, price: 67 }];
-    });
-  };
+  useEffect(() => {
+    if (user) {
+      mergeGuestCart();
+    }
+  }, [user]);
 
   return (
-    <BrowserRouter>
-      <Layout
-        cartItems={cartItems}
-        setCartItems={setCartItems}
-        addToCart={addToCart}
-      />
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Layout />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }

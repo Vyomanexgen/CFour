@@ -338,7 +338,36 @@ function PremiumSection({
   );
 }
 
+import { useStore } from "../context/StoreContext";
+import { useQuery } from "@tanstack/react-query";
+import { getPublicBanners, getPublicCampaigns } from "../api/marketingApi";
+import { Link } from "react-router-dom";
+
 export default function Home() {
+  const { newArrivals, loading, error } = useStore();
+
+  const { data: banners, isLoading: bannersLoading, isError: bannersError } = useQuery({
+    queryKey: ["marketing", "banners"],
+    queryFn: getPublicBanners,
+  });
+
+  const { data: campaigns, isLoading: campaignsLoading, isError: campaignsError } = useQuery({
+    queryKey: ["marketing", "campaigns"],
+    queryFn: getPublicCampaigns,
+  });
+
+  if (loading || bannersLoading || campaignsLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-black">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
+      </div>
+    );
+  }
+
+  const activeBanners = banners && banners.length > 0 ? banners.filter(b => b.status === "active" || b.isActive !== false) : [];
+  const featuredBanner = activeBanners[0];
+  const activeCampaigns = campaigns && campaigns.length > 0 ? campaigns.filter(c => c.status === "active") : [];
+
   return (
     <>
       {/* HERO */}
@@ -360,37 +389,50 @@ export default function Home() {
 
           bg-[#d9d9d9]
         "
+        style={featuredBanner?.image ? {
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${featuredBanner.image})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center"
+        } : undefined}
       >
-        <div className="text-center">
+        <div className="text-center max-w-[800px] px-6 text-white">
           <h1
-            className="
+            className={`
               text-[34px]
               font-bold
-              text-[#111]
+              ${featuredBanner?.imageUrl ? "text-white" : "text-[#111]"}
 
               md:text-[48px]
 
               lg:text-[58px]
-            "
+            `}
           >
-            Banner
+            {featuredBanner?.title || "Welcome to CFOUR"}
           </h1>
 
           <p
-            className="
+            className={`
               mt-5
 
-              text-[24px]
+              text-[18px]
               font-semibold
-              text-[#111]
+              ${featuredBanner?.imageUrl ? "text-gray-200" : "text-[#555]"}
 
-              md:text-[34px]
+              md:text-[24px]
 
-              lg:text-[52px]
-            "
+              lg:text-[32px]
+            `}
           >
-            1728 × 800
+            {featuredBanner?.subtitle || "Premium Electrical & Piping Solutions"}
           </p>
+          
+          {featuredBanner?.linkUrl && (
+            <Link to={featuredBanner.linkUrl}>
+              <button className="mt-8 rounded-full bg-white px-8 py-4 text-[16px] font-medium uppercase tracking-wide text-black transition-all hover:-translate-y-1 hover:bg-gray-200">
+                Shop Now
+              </button>
+            </Link>
+          )}
         </div>
 
         <div
@@ -501,7 +543,7 @@ export default function Home() {
         productKey="protection"
       />
 
-      {/* TRENDING PRODUCTS */}
+      {/* NEW ARRIVALS (Slider) */}
 
       <section
         className="
@@ -542,15 +584,19 @@ export default function Home() {
             lg:text-[52px]
           "
         >
-          Trending Products
+          New Arrivals
         </h2>
 
-        <MarqueeSlider
-          items={[image1, image2, image3]}
-          speed={18}
-          dark={false}
-          cardSize="square"
-        />
+        {newArrivals && newArrivals.length > 0 ? (
+          <MarqueeSlider
+            items={newArrivals.map(item => item.images?.[0] || image1)}
+            speed={18}
+            dark={false}
+            cardSize="square"
+          />
+        ) : (
+          <p className="text-gray-500 text-lg">No New Arrivals available at the moment.</p>
+        )}
       </section>
 
       {/* OFFER PRODUCTS */}
@@ -597,12 +643,21 @@ export default function Home() {
           Offer Product
         </h2>
 
-        <MarqueeSlider
-          items={[offer1, offer2, offer3]}
-          speed={20}
-          dark={true}
-          cardSize="card"
-        />
+        {activeCampaigns.length > 0 ? (
+          <MarqueeSlider
+            items={activeCampaigns[0]?.products?.map(p => p.image || offer1) || [offer1, offer2, offer3]}
+            speed={20}
+            dark={true}
+            cardSize="card"
+          />
+        ) : campaignsError ? (
+           <div className="text-center text-red-400 mt-4">Unable to load campaigns. Please try again later.</div>
+        ) : (
+           <div className="text-center text-gray-400 mt-4">
+             <p className="text-xl mb-4">No active promotional campaigns right now.</p>
+             <MarqueeSlider items={[offer1, offer2, offer3]} speed={20} dark={true} cardSize="card" />
+           </div>
+        )}
       </section>
 
       {/* RECOMMENDATIONS */}
@@ -649,12 +704,18 @@ export default function Home() {
           Recommendations
         </h2>
 
-        <MarqueeSlider
-          items={[image1, image2, image3]}
-          speed={16}
-          dark={false}
-          cardSize="square"
-        />
+        {activeCampaigns.length > 1 ? (
+          <MarqueeSlider
+            items={activeCampaigns[1]?.products?.map(p => p.image || image1) || [image1, image2, image3]}
+            speed={16}
+            dark={false}
+            cardSize="square"
+          />
+        ) : (
+           <div className="text-center text-gray-500 mt-4">
+             <MarqueeSlider items={[image1, image2, image3]} speed={16} dark={false} cardSize="square" />
+           </div>
+        )}
       </section>
     </>
   );

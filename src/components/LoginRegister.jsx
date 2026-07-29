@@ -1,17 +1,72 @@
 import { useState, useEffect } from "react";
-
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.webp";
 
 export default function LoginRegister() {
+  const navigate = useNavigate();
+  const { login, register, user } = useAuth();
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
   const [isRegister, setIsRegister] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+    
+    if (!email.trim() || (!isForgotPassword && !password)) {
+      setErrorMsg("Please fill in all required fields.");
+      return;
+    }
+
+    if (isRegister && password !== confirmPassword) {
+      setErrorMsg("Passwords do not match.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      if (isForgotPassword) {
+        // Recovery simulated placeholder
+        setSuccessMsg("If your email exists, a recovery link will be sent.");
+      } else if (isRegister) {
+        await register(email, password, name);
+        setSuccessMsg("Account created! Logging in...");
+        setTimeout(async () => {
+          try {
+            await login(email, password, name);
+            navigate("/");
+          } catch (err) {
+            setErrorMsg("Registration succeeded, but auto-login failed. Please log in manually.");
+          }
+        }, 1500);
+      } else {
+        await login(email, password);
+        navigate("/");
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.response?.data?.error || err.response?.data?.message || "An authentication error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
 
   return (
     <div
@@ -90,8 +145,18 @@ export default function LoginRegister() {
           </h1>
 
           {/* FORM */}
+          {errorMsg && (
+            <div className="mt-4 p-3 bg-red-100 border border-red-200 text-red-700 text-sm rounded-lg text-center font-medium">
+              {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="mt-4 p-3 bg-green-100 border border-green-200 text-green-700 text-sm rounded-lg text-center font-medium">
+              {successMsg}
+            </div>
+          )}
 
-          <div className="mt-8">
+          <form onSubmit={handleSubmit} className="mt-8">
             {/* EMAIL */}
 
             <div>
@@ -369,34 +434,38 @@ export default function LoginRegister() {
               "
             >
               <button
+                type="submit"
+                disabled={submitting}
                 className="
                   cursor-pointer
-
-                  h-[36px]
-                  min-w-[100px]
-
+                  h-[40px]
+                  min-w-[120px]
                   rounded-[8px]
-
                   bg-[#e31e24]
-
                   px-6
-
                   text-[16px]
                   font-semibold
-
                   text-white
-
                   transition-all
                   duration-300
-
                   hover:bg-[#c9151b]
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
+                  flex items-center justify-center gap-2
                 "
               >
-                {isForgotPassword
-                  ? "Send Link"
-                  : isRegister
-                    ? "Sign Up"
-                    : "Login"}
+                {submitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                    {isForgotPassword ? "Sending..." : isRegister ? "Registering..." : "Signing in..."}
+                  </>
+                ) : isForgotPassword ? (
+                  "Send Link"
+                ) : isRegister ? (
+                  "Sign Up"
+                ) : (
+                  "Login"
+                )}
               </button>
             </div>
 
@@ -537,7 +606,7 @@ export default function LoginRegister() {
                 </button>
               </>
             )}
-          </div>
+          </form>
         </div>
       </div>
     </div>

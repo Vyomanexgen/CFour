@@ -1,9 +1,16 @@
 import { useEffect } from "react";
 import { RiMapPinFill, RiPhoneFill, RiMailFill } from "@remixicon/react";
+import { useQuery } from "@tanstack/react-query";
+import { getPublicPage } from "../api/contentApi";
 
 import topImg from "../assets/contactUs/top.webp";
 
 export default function Contact() {
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ["content", "contact-us"],
+    queryFn: () => getPublicPage("contact-us"),
+  });
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
@@ -76,7 +83,7 @@ export default function Contact() {
               lg:text-[60px]
             "
           >
-            Contact Us
+            {pageData?.title || "Contact Us"}
           </h1>
 
           <p
@@ -93,7 +100,7 @@ export default function Contact() {
               lg:text-[30px]
             "
           >
-            "We're here to help — reach out anytime."
+            {pageData?.subtitle || ""}
           </p>
         </div>
       </section>
@@ -644,22 +651,20 @@ export default function Contact() {
             text-center
           "
         >
-          <p
-            className="
-              text-[18px]
-              font-semibold
-              leading-[1.8]
-
-              text-white
-
-              lg:text-[28px]
-            "
-          >
-            We'd love to hear from you. Whether you have a question about our
-            services, need support, or want to discuss a new project, our team
-            is always ready to assist. Reach out through the contact form,
-            email, or phone, and we will respond as quickly as possible.
-          </p>
+          {isLoading ? (
+            <div className="animate-pulse space-y-3 max-w-[800px] mx-auto">
+              <div className="h-4 bg-gray-600 rounded w-full"></div>
+              <div className="h-4 bg-gray-600 rounded w-full"></div>
+              <div className="h-4 bg-gray-600 rounded w-5/6"></div>
+            </div>
+          ) : (
+            <div 
+              className="text-[18px] font-semibold leading-[1.8] text-white lg:text-[28px] prose prose-invert mx-auto"
+              dangerouslySetInnerHTML={{ __html: pageData?.body || `
+                <p>Content coming soon. The store administrator is currently updating this page.</p>
+              `}}
+            />
+          )}
         </div>
 
         {/* MAP */}

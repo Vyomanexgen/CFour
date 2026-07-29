@@ -43,10 +43,17 @@ function Counter({ end, suffix = "", duration = 2000, startAnimation }) {
   );
 }
 
+import { useQuery } from "@tanstack/react-query";
+import { getPublicPage } from "../api/contentApi";
+
 export default function About() {
   const statsRef = useRef(null);
-
   const [startCount, setStartCount] = useState(false);
+
+  const { data: pageData, isLoading, isError } = useQuery({
+    queryKey: ["content", "about-us"],
+    queryFn: () => getPublicPage("about-us"),
+  });
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -229,7 +236,7 @@ export default function About() {
                     lg:text-[48px]
                   "
                 >
-                  Your Vision. Our Expertise.
+                  {pageData?.title || ""}
                 </h2>
 
                 <h2
@@ -243,7 +250,7 @@ export default function About() {
                     lg:text-[44px]
                   "
                 >
-                  Powering Smarter Electrical Living.
+                  {pageData?.subtitle || ""}
                 </h2>
 
                 <p
@@ -357,22 +364,21 @@ export default function About() {
             {/* TEXT */}
 
             <div className="mt-6">
-              <p
-                className="
-                  text-[18px]
-                  leading-[1.8]
-
-                  text-gray-200
-
-                  lg:text-[22px]
-                "
-              >
-                At <span className="font-bold text-[#ff2e63]">C⚡FOUR</span>, we
-                specialize in delivering high-quality electrical products
-                designed for safety, performance, and durability. From
-                residential to commercial needs, our solutions are crafted to
-                meet modern demands while ensuring reliability you can count on.
-              </p>
+              {isLoading ? (
+                <div className="animate-pulse space-y-3">
+                  <div className="h-4 bg-gray-600 rounded w-full"></div>
+                  <div className="h-4 bg-gray-600 rounded w-full"></div>
+                  <div className="h-4 bg-gray-600 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-600 rounded w-3/4"></div>
+                </div>
+              ) : (
+                <div 
+                  className="text-[18px] leading-[1.8] text-gray-200 lg:text-[22px] prose prose-invert"
+                  dangerouslySetInnerHTML={{ __html: pageData?.body || `
+                    <p>Content coming soon. The store administrator is currently updating this page.</p>
+                  `}}
+                />
+              )}
             </div>
 
             {/* STATS */}

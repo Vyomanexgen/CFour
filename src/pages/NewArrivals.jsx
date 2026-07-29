@@ -6,58 +6,23 @@ import product1 from "../assets/newArrivals/product1.webp";
 import product2 from "../assets/newArrivals/product2.webp";
 import product3 from "../assets/newArrivals/product3.webp";
 
+import { useQuery } from "@tanstack/react-query";
+import { getStorefrontProducts } from "../api/storefrontApi";
+import { useNavigate } from "react-router-dom";
+
 export default function NewArrivals() {
+  const navigate = useNavigate();
+  
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const products = [
-    {
-      id: 1,
-      image: product1,
-      title: "Name",
-    },
-    {
-      id: 2,
-      image: product2,
-      title: "Name",
-    },
-    {
-      id: 3,
-      image: product3,
-      title: "Name",
-    },
-    {
-      id: 4,
-      image: product1,
-      title: "Name",
-    },
-    {
-      id: 5,
-      image: product2,
-      title: "Name",
-    },
-    {
-      id: 6,
-      image: product3,
-      title: "Name",
-    },
-    {
-      id: 7,
-      image: product1,
-      title: "Name",
-    },
-    {
-      id: 8,
-      image: product2,
-      title: "Name",
-    },
-    {
-      id: 9,
-      image: product3,
-      title: "Name",
-    },
-  ];
+  const { data, isLoading } = useQuery({
+    queryKey: ["products", "new-arrivals"],
+    queryFn: () => getStorefrontProducts({ sortBy: "createdAt", sortOrder: "desc", limit: 9 }),
+  });
+
+  const productsList = data?.data?.products || data?.products || [];
 
   return (
     <>
@@ -82,7 +47,10 @@ export default function NewArrivals() {
               modern living powering smarter living starts here.
             </p>
 
-            <button className="mt-6 bg-[#C8102E] hover:bg-[#a50d26] transition-all duration-300 text-white font-semibold px-7 py-3 rounded-full shadow-md text-lg">
+            <button 
+              onClick={() => navigate("/products?sort=newest")}
+              className="mt-6 bg-[#C8102E] hover:bg-[#a50d26] transition-all duration-300 text-white font-semibold px-7 py-3 rounded-full shadow-md text-lg cursor-pointer"
+            >
               Shop Now
             </button>
           </div>
@@ -113,41 +81,59 @@ export default function NewArrivals() {
         </div>
 
         {/* PRODUCTS GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10 max-w-[1200px] mx-auto">
-          {products.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-lg overflow-hidden shadow-lg"
-            >
-              {/* IMAGE */}
-              <div className="relative">
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-[280px] object-cover"
-                />
-
-                {/* TAG */}
-                <span className="absolute top-3 left-3 bg-[#f5eaea] text-[#d01a00] text-xs px-3 py-1 rounded-md font-medium">
-                  New Arrival
-                </span>
-              </div>
-
-              {/* CONTENT */}
-              <div className="px-4 py-5 text-center">
-                <h3 className="text-3xl font-bold text-black">{item.title}</h3>
-
-                <p className="text-sm text-[#333] leading-[20px] mt-2">
-                  Elegant design with long-lasting performance.
-                </p>
-
-                <button className="mt-4 bg-[#d01a00] hover:bg-[#b81600] text-white text-xl font-semibold px-5 py-1 rounded-full transition-all duration-300">
-                  View Details
-                </button>
-              </div>
+        {isLoading ? (
+          <div className="flex justify-center mt-10">
+            <div className="animate-pulse flex space-x-4">
+              <div className="h-64 w-64 bg-gray-700 rounded-lg"></div>
+              <div className="h-64 w-64 bg-gray-700 rounded-lg"></div>
+              <div className="h-64 w-64 bg-gray-700 rounded-lg"></div>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10 max-w-[1200px] mx-auto">
+            {productsList.length > 0 ? productsList.map((item) => (
+              <div
+                key={item._id || item.id}
+                className="bg-white rounded-lg overflow-hidden shadow-lg flex flex-col"
+              >
+                {/* IMAGE */}
+                <div className="relative">
+                  <img
+                    src={item.images?.[0]?.url || item.images?.[0] || item.image || "https://placehold.co/300x280?text=No+Image"}
+                    alt={item.name || item.title}
+                    className="w-full h-[280px] object-cover"
+                    onError={(e) => {
+                      e.target.src = "https://placehold.co/300x280?text=No+Image";
+                    }}
+                  />
+
+                  {/* TAG */}
+                  <span className="absolute top-3 left-3 bg-[#f5eaea] text-[#d01a00] text-xs px-3 py-1 rounded-md font-medium">
+                    New Arrival
+                  </span>
+                </div>
+
+                {/* CONTENT */}
+                <div className="px-4 py-5 text-center flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-3xl font-bold text-black">{item.name || item.title}</h3>
+                    <p className="text-sm text-[#333] leading-[20px] mt-2 line-clamp-2">
+                      {item.description || "Elegant design with long-lasting performance."}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => navigate(`/products?id=${item._id || item.id}`)}
+                    className="mt-4 bg-[#d01a00] hover:bg-[#b81600] text-white text-xl font-semibold px-5 py-1 rounded-full transition-all duration-300 w-fit mx-auto cursor-pointer"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            )) : (
+              <p className="text-white text-center col-span-full">No new arrivals found.</p>
+            )}
+          </div>
+        )}
       </section>
     </>
   );
