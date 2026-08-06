@@ -36,3 +36,10 @@ export const getProductDetails = async (id) => {
   });
   return response.data;
 };
+
+export const submitContactUsForm = async (data) => {
+  const response = await apiClient.post("/api/v1/storefront/contact-us", data, {
+    params: { organizationId: ORG_ID },
+  });
+  return response.data;
+};

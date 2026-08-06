@@ -341,7 +341,7 @@ function VariantDetailsModal({
 }
 
 /* ── AMAZON-STYLE GROUP CARD (one card per product, dropdown if multiple variants) ── */
-function AmazonStyleGroupCard({ image, title, variants, onAddToCart }) {
+function AmazonStyleGroupCard({ image, title, variants, onAddToCart, product, onQuickView }) {
   const [showDetails, setShowDetails] = useState(false);
   const hasMultipleVariants = variants.length > 1;
   const first = variants[0];
@@ -362,6 +362,7 @@ function AmazonStyleGroupCard({ image, title, variants, onAddToCart }) {
           onClose={() => setShowDetails(false)}
           onAddToCart={(picked) =>
             onAddToCart({
+              ...(product || {}), // Include product ID and details
               image,
               title: `${title} — ${picked.description}`,
               price: picked.price,
@@ -386,18 +387,50 @@ function AmazonStyleGroupCard({ image, title, variants, onAddToCart }) {
           flex
           flex-col
           h-full
+          group
+          relative
         "
       >
         {/* IMAGE — fills the box */}
-        <div className="bg-[#3a3a3a] h-[200px] overflow-hidden">
+        <div className="bg-[#3a3a3a] h-[200px] overflow-hidden relative">
           <img
             src={image}
             alt={title}
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
               e.target.src = "https://placehold.co/300x200?text=No+Image";
             }}
           />
+          {/* QUICK VIEW OVERLAY */}
+          {onQuickView && product && (
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 z-10">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onQuickView(product);
+                }}
+                className="
+                  bg-white
+                  text-gray-800
+                  text-xs
+                  font-semibold
+                  px-4
+                  py-2
+                  rounded-full
+                  shadow-lg
+                  hover:bg-red-500
+                  hover:text-white
+                  transition
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-red-400
+                  cursor-pointer
+                "
+              >
+                Quick View
+              </button>
+            </div>
+          )}
         </div>
 
         {/* INFO */}
@@ -490,6 +523,7 @@ function AmazonStyleGroupCard({ image, title, variants, onAddToCart }) {
                 setShowDetails(true);
               } else {
                 onAddToCart({
+                  ...(product || {}), // Pass full product data so cart handles ID correctly
                   image,
                   title: `${title} — ${displayDesc}`,
                   price: first.price,
@@ -533,10 +567,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCart } from "../context/CartContext";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
+import { useStore } from "../context/StoreContext";
 
 export default function Products() {
   const { addToCart: contextAddToCart, isCartUpdating } = useCart();
   const { user } = useAuth();
+  const { categories: dynamicCategories, loading: isCategoriesLoading } = useStore();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [addingProductIds, setAddingProductIds] = useState({});
@@ -641,12 +677,34 @@ export default function Products() {
     });
   };
 
+  const [apiError, setApiError] = useState(false);
+  const legacySlugs = ["pipes", "lights", "protection", "plumbing", "switch", "products"];
+  
+  const matchedCategory = selectedCategory !== "all" 
+    ? dynamicCategories?.find(c => c.slug === selectedCategory) 
+    : null;
+    
+  const categoryId = matchedCategory?._id || matchedCategory?.id;
+  const isLegacyCategory = legacySlugs.includes(selectedCategory);
+
   /* ── FETCH REAL DB PRODUCTS ── */
   useEffect(() => {
     let active = true;
+    if (isCategoriesLoading) return; // Wait for categories to load
+
     const loadProducts = async () => {
       try {
         setIsLoading(true);
+        setApiError(false);
+
+        // If category is not "all" and not matched to a DB category, don't fetch products
+        if (selectedCategory !== "all" && !matchedCategory) {
+          setProductsList([]);
+          setTotalPages(1);
+          setIsLoading(false);
+          return;
+        }
+
         let res;
         if (searchQuery) {
           res = await searchStorefrontProducts(searchQuery, {
@@ -658,6 +716,9 @@ export default function Products() {
             page: currentPage,
             limit: 12,
           };
+          if (categoryId) {
+            queryParams.categoryId = categoryId; // Pass dynamic category ID
+          }
           if (sortBy !== "default") {
             queryParams.sortBy = sortBy === "newest" ? "createdAt" : "name";
             queryParams.sortOrder = sortBy === "price-desc" ? "desc" : "asc";
@@ -671,6 +732,7 @@ export default function Products() {
         }
       } catch (err) {
         console.error("Failed to fetch products list from backend", err);
+        if (active) setApiError(true);
       } finally {
         if (active) setIsLoading(false);
       }
@@ -680,7 +742,7 @@ export default function Products() {
     return () => {
       active = false;
     };
-  }, [selectedCategory, currentPage, sortBy, searchQuery]);
+  }, [selectedCategory, currentPage, sortBy, searchQuery, isCategoriesLoading, categoryId, matchedCategory]);
 
   /* RESET & SCROLL WHEN CATEGORY CHANGES */
   useEffect(() => {
@@ -2046,285 +2108,144 @@ export default function Products() {
       );
       list = [...list, ...remaining];
     }
-    
     return list.map(normalizeProduct).slice(0, 6);
   })();
 
-  /* ── FILTER PANEL COMPONENT ── */
   const allBrands = ["CFOUR"];
   const allColors = ["green", "white", "black"];
 
   const FilterPanel = () => (
-    <div
-      className={`
-        w-full
-        lg:w-[260px]
-        bg-white
-        p-5
-        rounded-xl
-        shadow-md
-        h-fit
-        lg:block
-        ${sidebarOpen ? "block" : "hidden"}
-      `}
-    >
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-xl font-bold">Product Catalog & Filters</h2>
-        <button
-          onClick={() => {
-            setSelectedBrands([]);
-            setSelectedColors([]);
-            setPriceRange([0, 10000]);
-            setAvailabilityFilter("all");
-            setSortBy("default");
-            setCurrentPage(1);
-          }}
-          className="text-xs text-red-500 hover:underline focus:outline-none cursor-pointer"
-        >
-          Clear All
-        </button>
-      </div>
-
-      {/* SORT */}
-      <div className="mb-6">
-        <h3 className="font-bold text-base mb-3">Sort By</h3>
-        <select
-          aria-label="Sort products"
-          value={sortBy}
-          onChange={(e) => {
-            setSortBy(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer"
-        >
-          <option value="default">Default</option>
-          <option value="price-asc">Price: Low → High</option>
-          <option value="price-desc">Price: High → Low</option>
-          <option value="newest">Newest First</option>
-          <option value="popularity">Most Popular</option>
-        </select>
-      </div>
-
-      {/* PRICE RANGE — smooth slider fix */}
-      <div className="mb-6">
-        <h3 className="font-bold text-base mb-3">Price Range (₹)</h3>
-        <div className="relative pt-1">
-          <input
-            type="range"
-            min="0"
-            max="10000"
-            step="1"
-            value={priceRange[1]}
+    <div className="w-full bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row flex-wrap items-center justify-between gap-4 mb-6">
+      
+      {/* FILTER CONTROLS GROUP */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 w-full md:w-auto">
+        
+        {/* SORT */}
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-sm text-gray-700 whitespace-nowrap">Sort By:</span>
+          <select
+            aria-label="Sort products"
+            value={sortBy}
             onChange={(e) => {
-              setPriceRange([priceRange[0], Number(e.target.value)]);
+              setSortBy(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-red-500"
-            style={{
-              background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${(priceRange[1] / 10000) * 100}%, #e5e7eb ${(priceRange[1] / 10000) * 100}%, #e5e7eb 100%)`,
+            className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer bg-white"
+          >
+            <option value="default">Default</option>
+            <option value="price-asc">Price: Low → High</option>
+            <option value="price-desc">Price: High → Low</option>
+            <option value="newest">Newest First</option>
+            <option value="popularity">Most Popular</option>
+          </select>
+        </div>
+
+        {/* PRICE RANGE */}
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-sm text-gray-700 whitespace-nowrap">Max Price (₹{priceRange[1]}):</span>
+          <div className="w-24 flex items-center">
+            <input
+              type="range"
+              min="0"
+              max="10000"
+              step="1"
+              value={priceRange[1]}
+              onChange={(e) => {
+                setPriceRange([priceRange[0], Number(e.target.value)]);
+                setCurrentPage(1);
+              }}
+              className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-red-500 bg-gray-200"
+            />
+          </div>
+        </div>
+
+        {/* BRAND */}
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-sm text-gray-700 whitespace-nowrap">Brand:</span>
+          <div className="flex items-center gap-3">
+            {allBrands.map((brand) => (
+              <label key={brand} className="flex items-center gap-1.5 cursor-pointer text-sm">
+                <input
+                  type="checkbox"
+                  checked={selectedBrands.includes(brand)}
+                  onChange={() => {
+                    setSelectedBrands((prev) =>
+                      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+                    );
+                    setCurrentPage(1);
+                  }}
+                  className="accent-red-500 w-3.5 h-3.5 cursor-pointer"
+                />
+                {brand}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* COLOUR */}
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-sm text-gray-700 whitespace-nowrap">Colour:</span>
+          <div className="flex gap-1.5">
+            {allColors.map((c) => (
+              <button
+                key={c}
+                aria-label={`Filter by colour ${c}`}
+                onClick={() => {
+                  setSelectedColors((prev) =>
+                    prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
+                  );
+                  setCurrentPage(1);
+                }}
+                className={`w-5 h-5 rounded-full border focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-400 cursor-pointer transition-all ${
+                  selectedColors.includes(c) ? "border-red-500 ring-1 ring-red-500 scale-110" : "border-gray-300"
+                }`}
+                style={{
+                  backgroundColor:
+                    c === "green" ? "#16a34a" : c === "black" ? "#111" : "#f3f4f6",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* AVAILABILITY */}
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-sm text-gray-700 whitespace-nowrap">Availability:</span>
+          <select
+            aria-label="Filter by availability"
+            value={availabilityFilter}
+            onChange={(e) => {
+              setAvailabilityFilter(e.target.value);
+              setCurrentPage(1);
             }}
-          />
-        </div>
-        <div className="flex justify-between text-sm text-gray-600 mt-2">
-          <span className="font-medium">₹{priceRange[0]}</span>
-          <span className="font-medium text-red-500">₹{priceRange[1]}</span>
-        </div>
-      </div>
-
-      {/* BRAND */}
-      <div className="mb-6">
-        <h3 className="font-bold text-base mb-3">Brand</h3>
-        {allBrands.map((brand) => (
-          <label
-            key={brand}
-            className="flex items-center gap-2 mb-2 cursor-pointer text-sm"
+            className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 cursor-pointer bg-white"
           >
-            <input
-              type="checkbox"
-              checked={selectedBrands.includes(brand)}
-              onChange={() => {
-                setSelectedBrands((prev) =>
-                  prev.includes(brand)
-                    ? prev.filter((b) => b !== brand)
-                    : [...prev, brand],
-                );
-                setCurrentPage(1);
-              }}
-              className="accent-red-500 w-4 h-4 cursor-pointer"
-              aria-label={`Filter by brand ${brand}`}
-            />
-            {brand}
-          </label>
-        ))}
-      </div>
-
-      {/* COLOUR */}
-      <div className="mb-6">
-        <h3 className="font-bold text-base mb-3">Colour</h3>
-        <div className="flex gap-3 flex-wrap">
-          {allColors.map((c) => (
-            <button
-              key={c}
-              aria-label={`Filter by colour ${c}`}
-              onClick={() => {
-                setSelectedColors((prev) =>
-                  prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
-                );
-                setCurrentPage(1);
-              }}
-              className={`w-8 h-8 rounded-full border-2 transition focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-400 cursor-pointer ${selectedColors.includes(c) ? "border-red-500 scale-110" : "border-gray-300"}`}
-              style={{
-                backgroundColor:
-                  c === "green"
-                    ? "#16a34a"
-                    : c === "black"
-                      ? "#111"
-                      : "#e5e7eb",
-              }}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* AVAILABILITY */}
-      <div className="mb-6">
-        <h3 className="font-bold text-base mb-3">Availability</h3>
-        {[
-          ["all", "All"],
-          ["instock", "In Stock"],
-          ["outofstock", "Out of Stock"],
-        ].map(([val, label]) => (
-          <label
-            key={val}
-            className="flex items-center gap-2 mb-2 cursor-pointer text-sm"
-          >
-            <input
-              type="radio"
-              name="availability"
-              value={val}
-              checked={availabilityFilter === val}
-              onChange={() => {
-                setAvailabilityFilter(val);
-                setCurrentPage(1);
-              }}
-              className="accent-red-500 w-4 h-4 cursor-pointer"
-            />
-            {label}
-          </label>
-        ))}
-      </div>
-
-      {/* DIAMETER */}
-      <div className="mb-5">
-        <div
-          className="flex justify-between items-center mb-2 cursor-pointer"
-          onClick={() => setShowDiameter(!showDiameter)}
-        >
-          <h4 className="font-semibold">Diameter</h4>
-          <span>{showDiameter ? "⌃" : "⌄"}</span>
+            <option value="all">All</option>
+            <option value="instock">In Stock</option>
+            <option value="outofstock">Out of Stock</option>
+          </select>
         </div>
 
-        {showDiameter && (
-          <div className="space-y-2 text-sm">
-            {["1/2 inch", "1 inch", "2 inch", "4 inch", "6+ inch"].map(
-              (item) => (
-                <label
-                  key={item}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedDiameter.includes(item)}
-                    onChange={() =>
-                      setSelectedDiameter((prev) =>
-                        prev.includes(item)
-                          ? prev.filter((x) => x !== item)
-                          : [...prev, item],
-                      )
-                    }
-                    className="w-4 h-4 accent-red-500 cursor-pointer"
-                  />
-                  {item}
-                </label>
-              ),
-            )}
-          </div>
-        )}
       </div>
 
-      {/* MATERIAL */}
-      <div className="mb-5">
-        <div
-          className="flex justify-between items-center mb-2 cursor-pointer"
-          onClick={() => setShowMaterial(!showMaterial)}
-        >
-          <h4 className="font-semibold">Material</h4>
-          <span>{showMaterial ? "⌃" : "⌄"}</span>
-        </div>
-
-        {showMaterial && (
-          <div className="space-y-2 text-sm">
-            {["PVC", "UPVC", "CPVC"].map((item) => (
-              <label
-                key={item}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedMaterials.includes(item)}
-                  onChange={() =>
-                    setSelectedMaterials((prev) =>
-                      prev.includes(item)
-                        ? prev.filter((x) => x !== item)
-                        : [...prev, item],
-                    )
-                  }
-                  className="w-4 h-4 accent-red-500 cursor-pointer"
-                />
-                {item}
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* FITTINGS */}
-      <div className="mb-5">
-        <div
-          className="flex justify-between items-center mb-2 cursor-pointer"
-          onClick={() => setShowFittings(!showFittings)}
-        >
-          <h4 className="font-semibold">Fittings</h4>
-          <span>{showFittings ? "⌃" : "⌄"}</span>
-        </div>
-
-        {showFittings && (
-          <div className="space-y-2 text-sm">
-            {["Elbows", "Tees", "Couplings", "Flanges"].map((item) => (
-              <label
-                key={item}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedFittings.includes(item)}
-                  onChange={() =>
-                    setSelectedFittings((prev) =>
-                      prev.includes(item)
-                        ? prev.filter((x) => x !== item)
-                        : [...prev, item],
-                    )
-                  }
-                  className="w-4 h-4 accent-red-500 cursor-pointer"
-                />
-                {item}
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* CLEAR ALL BUTTON */}
+      <button
+        onClick={() => {
+          setSelectedBrands([]);
+          setSelectedColors([]);
+          setPriceRange([0, 10000]);
+          setAvailabilityFilter("all");
+          setSortBy("default");
+          setCurrentPage(1);
+        }}
+        className="text-xs font-semibold text-red-500 hover:text-red-600 hover:underline focus:outline-none whitespace-nowrap"
+      >
+        Clear All Filters
+      </button>
     </div>
   );
+
+  const shouldShowLegacyMock = isLegacyCategory && !isLoading && !isCategoriesLoading && !apiError && productsList.length === 0;
 
   return (
     <>
@@ -2531,319 +2452,91 @@ export default function Products() {
         </div>
       )}
 
-      {/* HERO IMAGE */}
+      {/* SPECIFIC CATEGORY VIEW (UNIFIED GRID) */}
       {selectedCategory !== "all" && (
-        <section className="w-full bg-black overflow-hidden pt-[85px]">
-          <img
-            src={heroImg}
-            alt="Products Hero"
-            className="w-full object-cover object-top"
-          />
-        </section>
-      )}
-
-      {/* DEFAULT PRODUCTS PAGE */}
-      {selectedCategory === "products" && (
         <>
-          {/* PIPES */}
-          <section
-            ref={pipesRef}
-            className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
-          >
-            <div className="px-6">
-              <h2 className="text-4xl font-semibold mb-8">Pipes</h2>
-              <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
-                {pipeProducts.map((item, index) => (
-                  <div
-                    key={index}
-                    onClick={() => navigate("/products?category=pipes")}
-                    className="
-            min-w-[280px]
-            bg-[#f5f5f5]
-            rounded-xl
-            p-5
-            flex-shrink-0
-            shadow-md
-            hover:-translate-y-1
-            hover:shadow-xl
-            transition-all
-            duration-300
-            cursor-pointer
-          "
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.title || "pipe product"}
-                      className="w-full h-[320px] object-contain scale-110"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://placehold.co/300x320?text=No+Image";
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+          <section className="w-full bg-black overflow-hidden pt-[85px]">
+            <img
+              src={heroImg}
+              alt="Products Hero"
+              className="w-full h-[250px] object-cover object-center"
+            />
           </section>
+          <section className="w-full bg-[#efefef] pt-10 pb-10 min-h-[60vh]">
+           <div className="max-w-7xl mx-auto px-6">
+             <div className="flex items-center justify-between mb-8">
+               <h2 className="text-3xl sm:text-4xl font-semibold uppercase">
+                 {matchedCategory ? matchedCategory.name : selectedCategory}
+               </h2>
+             </div>
 
-          {/* LIGHTS */}
-          <section
-            ref={lightsRef}
-            className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
-          >
-            <div className="px-6">
-              <h2 className="text-4xl font-semibold mb-8">Lights</h2>
-              <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
-                {lightProducts.map((item, index) => (
-                  <div
-                    key={index}
-                    onClick={() => navigate("/products?category=lights")}
-                    className="
-            min-w-[280px]
-            bg-[#f5f5f5]
-            rounded-xl
-            p-5
-            flex-shrink-0
-            shadow-md
-            hover:-translate-y-1
-            hover:shadow-xl
-            transition-all
-            duration-300
-            cursor-pointer
-          "
-                  >
-                    <img
-                      src={item.image}
-                      alt="light product"
-                      className="w-full h-[320px] object-contain scale-110"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://placehold.co/300x320?text=No+Image";
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+             {isLoading || isCategoriesLoading ? (
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                   {Array.from({ length: 8 }).map((_, i) => (
+                     <SkeletonCard key={i} />
+                   ))}
+                 </div>
+             ) : productsList.length > 0 ? (
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                   {productsList.map((product, index) => {
+                     const variants = product.variants?.length > 0 ? product.variants.map(v => ({
+                         description: v.sku || v.attributes?.packing || product.name,
+                         price: v.offerPrice || v.originalPrice || product.price || 0,
+                         packing: v.attributes?.packing || ""
+                     })) : [{ description: product.name || "Standard", price: product.price || 0, packing: "" }];
+                     
+                     return (
+                       <AmazonStyleGroupCard
+                         key={index}
+                         image={product.images?.[0] || product.image || "https://placehold.co/400x300?text=No+Image"}
+                         title={product.name || product.title}
+                         variants={variants}
+                         onAddToCart={addToCart}
+                         product={product}
+                         onQuickView={setQuickViewProduct}
+                       />
+                     );
+                   })}
+                 </div>
+             ) : shouldShowLegacyMock ? (
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                   {(selectedCategory === "pipes" || selectedCategory === "products") && pipesFittingsProducts.map((p, i) => (
+                       <AmazonStyleGroupCard key={`pipe-${i}`} image={p.image} title={p.title} variants={p.specs} onAddToCart={addToCart} product={{...p, _id: p.id || p.title}} onQuickView={setQuickViewProduct} />
+                   ))}
+                   {(selectedCategory === "lights" || selectedCategory === "products") && lightsDetailedProducts.map((p, i) => {
+                       const normalizedVariants = p.rows.map(row => ({
+                           label: renderRow(row)[0],
+                           description: p.columns.slice(0, -1).map((col, idx) => `${col}: ${renderRow(row)[idx]}`).join(" · "),
+                           price: row.price || "0"
+                       }));
+                       return <AmazonStyleGroupCard key={`light-${i}`} image={p.image} title={p.title} variants={normalizedVariants} onAddToCart={addToCart} product={{...p, _id: p.id || p.title}} onQuickView={setQuickViewProduct} />
+                   })}
+                   {selectedCategory === "protection" && protectionProducts.map((p, i) => {
+                       const normalizedVariants = p.variants.map(v => ({ description: v.name, price: v.price, packing: v.packing }));
+                       return <AmazonStyleGroupCard key={`prot-${i}`} image={p.image} title={p.title} variants={normalizedVariants} onAddToCart={addToCart} product={{...p, _id: p.id || p.title}} onQuickView={setQuickViewProduct} />
+                   })}
+                   {selectedCategory === "plumbing" && plumbingProducts.map((p, i) => (
+                       <AmazonStyleGroupCard key={`plum-${i}`} image={p.image} title={p.title} variants={p.specs} onAddToCart={addToCart} product={{...p, _id: p.id || p.title}} onQuickView={setQuickViewProduct} />
+                   ))}
+                   {selectedCategory === "switch" && switchProducts.map((p, i) => (
+                       <AmazonStyleGroupCard key={`sw-${i}`} image={p.image} title={p.title} variants={p.specs} onAddToCart={addToCart} product={{...p, _id: p.id || p.title}} onQuickView={setQuickViewProduct} />
+                   ))}
+                 </div>
+             ) : (
+                 <div className="text-center py-20 text-gray-500">
+                   <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                   </svg>
+                   <p className="text-xl font-semibold mb-2">No products found</p>
+                   <p className="text-sm">The category "{selectedCategory}" does not have any products yet.</p>
+                 </div>
+             )}
+           </div>
+         </section>
         </>
       )}
 
-      {/* ONLY PIPES */}
-      {selectedCategory === "pipes" && (
-        <section
-          ref={pipesRef}
-          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
-        >
-          <div className="px-4 sm:px-6">
-            <h2 className="text-3xl sm:text-4xl font-semibold mb-8">Pipes</h2>
-            <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
-              {pipeProducts.map((item, index) => (
-                <div
-                  key={index}
-                  className="
-                    min-w-[280px]
-                    bg-[#f5f5f5]
-                    rounded-xl
-                    p-5
-                    flex-shrink-0
-                    shadow-md
-                    hover:-translate-y-1
-                    hover:shadow-xl
-                    transition-all
-                    duration-300
-                  "
-                >
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-[320px] object-contain scale-110"
-                    onError={(e) => {
-                      e.target.src =
-                        "https://placehold.co/300x320?text=No+Image";
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <h2 className="text-3xl sm:text-4xl font-semibold mt-16 mb-8">
-              PIPES & FITTINGS
-            </h2>
-
-            {/* ── AMAZON-STYLE GRID — one card per product, dropdown for multiple specs ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {pipesFittingsProducts.map((product, index) => (
-                <AmazonStyleGroupCard
-                  key={index}
-                  image={product.image}
-                  title={product.title}
-                  variants={product.specs}
-                  onAddToCart={addToCart}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ONLY LIGHTS */}
-      {selectedCategory === "lights" && (
-        <section
-          ref={lightsRef}
-          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
-        >
-          <div className="px-4 sm:px-6">
-            <h2 className="text-3xl sm:text-4xl font-semibold mb-8">Lights</h2>
-            <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
-              {lightProducts.map((item, index) => (
-                <div
-                  key={index}
-                  className="
-                    min-w-[280px]
-                    bg-[#f5f5f5]
-                    rounded-xl
-                    p-5
-                    flex-shrink-0
-                    shadow-md
-                    hover:-translate-y-1
-                    hover:shadow-xl
-                    transition-all
-                    duration-300
-                  "
-                >
-                  <img
-                    src={item.image}
-                    alt="light product"
-                    className="w-full h-[320px] object-contain scale-110"
-                    onError={(e) => {
-                      e.target.src =
-                        "https://placehold.co/300x320?text=No+Image";
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <h2 className="text-3xl sm:text-4xl font-semibold mt-16 mb-8">
-              LIGHTS & ACCESSORIES
-            </h2>
-
-            {/* ── AMAZON-STYLE GRID — one card per product, dropdown for multiple rows ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {lightsDetailedProducts.map((product, index) => {
-                const normalizedVariants = product.rows.map((row) => ({
-                  label: renderRow(row)[0],
-                  description: product.columns
-                    .slice(0, -1)
-                    .map((col, i) => `${col}: ${renderRow(row)[i]}`)
-                    .join(" · "),
-                  price: row.price || "0",
-                }));
-                return (
-                  <AmazonStyleGroupCard
-                    key={index}
-                    image={product.image}
-                    title={product.title}
-                    variants={normalizedVariants}
-                    onAddToCart={addToCart}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* PROTECTION SYSTEMS SECTION */}
-      {selectedCategory === "protection" && (
-        <section
-          ref={protectionRef}
-          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
-        >
-          <div className="px-4 sm:px-6">
-            <h2 className="text-3xl sm:text-4xl font-semibold mb-8">
-              Protection Systems
-            </h2>
-
-            {/* ── AMAZON-STYLE GRID ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {protectionProducts.map((product, index) => {
-                const normalizedVariants = product.variants.map((v) => ({
-                  description: v.name,
-                  price: v.price,
-                  packing: v.packing,
-                }));
-                return (
-                  <AmazonStyleGroupCard
-                    key={index}
-                    image={product.image}
-                    title={product.title}
-                    variants={normalizedVariants}
-                    onAddToCart={addToCart}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* PLUMBING SECTION */}
-      {selectedCategory === "plumbing" && (
-        <section
-          ref={plumbingRef}
-          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
-        >
-          <div className="px-4 sm:px-6">
-            <h2 className="text-3xl sm:text-4xl font-semibold mb-8">
-              Plumbing
-            </h2>
-
-            {/* ── AMAZON-STYLE GRID ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {plumbingProducts.map((product, index) => (
-                <AmazonStyleGroupCard
-                  key={index}
-                  image={product.image}
-                  title={product.title}
-                  variants={product.specs}
-                  onAddToCart={addToCart}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* SWITCH / SURFACE BOX SECTION */}
-      {selectedCategory === "switch" && (
-        <section
-          ref={switchRef}
-          className="w-full py-10 bg-[#d9d9d9] overflow-hidden"
-        >
-          <div className="px-4 sm:px-6">
-            <h2 className="text-3xl sm:text-4xl font-semibold mb-8">
-              Surface Box Collection
-            </h2>
-
-            {/* ── AMAZON-STYLE GRID ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {switchProducts.map((product, index) => (
-                <AmazonStyleGroupCard
-                  key={index}
-                  image={product.image}
-                  title={product.title}
-                  variants={product.specs}
-                  onAddToCart={addToCart}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ALL PRODUCTS */}
+      {/* ALL PRODUCTS (GENERIC GRID WITH SIDEBAR) */}
       {selectedCategory === "all" && (
         <>
           {/* PRODUCT DETAIL FULL VIEW */}
@@ -3385,47 +3078,13 @@ export default function Products() {
               </div>
 
               {/* PRODUCTS */}
-              <div className="max-w-7xl mx-auto flex flex-col gap-6 px-6 lg:flex-row">
-                {/* MOBILE FILTER TOGGLE */}
-                <div className="lg:hidden">
-                  <button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    aria-expanded={sidebarOpen}
-                    aria-controls="filter-panel"
-                    className="
-                      flex
-                      items-center
-                      gap-2
-                      bg-white
-                      border
-                      border-gray-300
-                      px-4
-                      py-2
-                      rounded-xl
-                      shadow-sm
-                      text-sm
-                      font-semibold
-                      w-full
-                      justify-between
-                      focus:outline-none
-                      focus:ring-2
-                      focus:ring-red-400
-                      min-h-[44px]
-                      cursor-pointer
-                    "
-                  >
-                    <span>Filters & Categories</span>
-                    <span>{sidebarOpen ? "▲" : "▼"}</span>
-                  </button>
-                </div>
+              <div className="max-w-7xl mx-auto flex flex-col gap-6 px-6">
+                
+                {/* FILTER PANEL (HORIZONTAL) */}
+                <FilterPanel />
 
-                {/* SIDEBAR — replaced with FilterPanel */}
-                <div id="filter-panel">
-                  <FilterPanel />
-                </div>
-
-                {/* PRODUCT GRID */}
-                <div className="flex-1 min-w-0">
+                {/* PRODUCT LIST */}
+                <div className="w-full">
                   <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
                     <h2 ref={allProductsRef} className="text-4xl font-bold">
                       {searchQuery ? `Search Results for "${searchQuery}"` : "All Products"}

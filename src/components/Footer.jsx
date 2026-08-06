@@ -1,9 +1,11 @@
+import { useStore } from "../context/StoreContext";
 import { Link } from "react-router-dom";
 import {
   RiInstagramLine,
   RiLinkedinBoxFill,
   RiTwitterXLine,
   RiFacebookCircleFill,
+  RiYoutubeFill,
   RiMapPinLine,
   RiPhoneLine,
   RiMailLine,
@@ -13,6 +15,8 @@ import {
 import logo from "../assets/logo.webp";
 
 export default function Footer() {
+  const { footerData, categories, socialLinks } = useStore();
+  
   return (
     <footer
       className="
@@ -100,8 +104,7 @@ export default function Footer() {
               lg:text-[18px]
             "
           >
-            At Cfour, we provide innovative and dependable electrical products
-            that power homes and businesses with confidence.
+            {footerData?.description || "At Cfour, we provide innovative and dependable electrical products that power homes and businesses with confidence."}
           </p>
 
           {/* SOCIAL */}
@@ -116,13 +119,34 @@ export default function Footer() {
               gap-4
             "
           >
-            <RiInstagramLine size={28} />
+            {socialLinks?.length > 0 ? (
+              socialLinks.map((social, idx) => {
+                let Icon = RiInstagramLine;
+                if (social.platform === "Facebook") Icon = RiFacebookCircleFill;
+                if (social.platform === "Twitter") Icon = RiTwitterXLine;
+                if (social.platform === "LinkedIn") Icon = RiLinkedinBoxFill;
+                if (social.platform === "YouTube") Icon = RiYoutubeFill;
 
-            <RiLinkedinBoxFill size={28} />
-
-            <RiTwitterXLine size={28} />
-
-            <RiFacebookCircleFill size={28} />
+                return (
+                  <a
+                    key={idx}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-red-600 transition"
+                  >
+                    <Icon size={28} />
+                  </a>
+                );
+              })
+            ) : (
+              <>
+                <RiInstagramLine size={28} />
+                <RiLinkedinBoxFill size={28} />
+                <RiTwitterXLine size={28} />
+                <RiFacebookCircleFill size={28} />
+              </>
+            )}
           </div>
         </div>
 
@@ -151,50 +175,65 @@ export default function Footer() {
               text-black
             "
           >
-            <li>
-              <Link
-                to="/"
-                className="cursor-pointer hover:text-red-600 transition"
-              >
-                Home
-              </Link>
-            </li>
+            {footerData?.quickLinks?.length > 0 ? (
+              footerData.quickLinks.map((link, idx) => (
+                <li key={idx}>
+                  <Link
+                    to={link.url}
+                    className="cursor-pointer hover:text-red-600 transition"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))
+            ) : (
+              <>
+                <li>
+                  <Link
+                    to="/"
+                    className="cursor-pointer hover:text-red-600 transition"
+                  >
+                    Home
+                  </Link>
+                </li>
 
-            <li>
-              <Link
-                to="/products"
-                className="cursor-pointer hover:text-red-600 transition"
-              >
-                Products
-              </Link>
-            </li>
+                <li>
+                  <Link
+                    to="/products"
+                    className="cursor-pointer hover:text-red-600 transition"
+                  >
+                    Products
+                  </Link>
+                </li>
 
-            <li>
-              <Link
-                to="/about"
-                className="cursor-pointer hover:text-red-600 transition"
-              >
-                About Us
-              </Link>
-            </li>
+                <li>
+                  <Link
+                    to="/about"
+                    className="cursor-pointer hover:text-red-600 transition"
+                  >
+                    About Us
+                  </Link>
+                </li>
 
-            <li>
-              <Link
-                to="/new-arrivals"
-                className="cursor-pointer hover:text-red-600 transition"
-              >
-                New Arrivals
-              </Link>
-            </li>
+                <li>
+                  <Link
+                    to="/new-arrivals"
+                    className="cursor-pointer hover:text-red-600 transition"
+                  >
+                    New Arrivals
+                  </Link>
+                </li>
 
-            <li>
-              <Link
-                to="/contact"
-                className="cursor-pointer hover:text-red-600 transition"
-              >
-                Contact Us
-              </Link>
-            </li>
+                <li>
+                  <Link
+                    to="/contact"
+                    className="cursor-pointer hover:text-red-600 transition"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -223,36 +262,51 @@ export default function Footer() {
               text-black
             "
           >
-            <li>
-              <Link
-                to="/products?category=pipes"
-                className="cursor-pointer hover:text-red-600 transition"
-              >
-                Pipes
-              </Link>
-            </li>
+            {categories && categories.length > 0 ? (
+              categories.slice(0, 5).map((cat) => (
+                <li key={cat._id || cat.slug}>
+                  <Link
+                    to={`/products?category=${cat.slug || cat.name.toLowerCase()}`}
+                    className="cursor-pointer hover:text-red-600 transition capitalize"
+                  >
+                    {cat.name}
+                  </Link>
+                </li>
+              ))
+            ) : (
+              <>
+                <li>
+                  <Link
+                    to="/products?category=pipes"
+                    className="cursor-pointer hover:text-red-600 transition"
+                  >
+                    Pipes
+                  </Link>
+                </li>
 
-            <li>
-              <Link
-                to="/products?category=lights"
-                className="cursor-pointer hover:text-red-600 transition"
-              >
-                Lights
-              </Link>
-            </li>
+                <li>
+                  <Link
+                    to="/products?category=lights"
+                    className="cursor-pointer hover:text-red-600 transition"
+                  >
+                    Lights
+                  </Link>
+                </li>
 
-            <li>
-              <Link
-                to="/products?category=switch"
-                className="cursor-pointer hover:text-red-600 transition"
-              >
-                Switches
-              </Link>
-            </li>
+                <li>
+                  <Link
+                    to="/products?category=switch"
+                    className="cursor-pointer hover:text-red-600 transition"
+                  >
+                    Switches
+                  </Link>
+                </li>
 
-            <li>Modular Plates</li>
+                <li>Modular Plates</li>
 
-            <li>Sockets</li>
+                <li>Sockets</li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -284,29 +338,29 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <RiMapPinLine size={22} />
 
-              <span>Gachibowli, Hyderabad, India</span>
+              <span>{footerData?.contactUs?.address || "Gachibowli, Hyderabad, India"}</span>
             </div>
 
             <a
-              href="tel:+917867789876"
+              href={`tel:${footerData?.contactUs?.phone || "+917867789876"}`}
               className="flex items-center gap-3 hover:text-red-700 transition-colors duration-200"
             >
               <RiPhoneLine size={22} />
-              <span>+91 7867789876</span>
+              <span>{footerData?.contactUs?.phone || "+91 7867789876"}</span>
             </a>
 
             <a
-              href="mailto:contact@cfour.com"
+              href={`mailto:${footerData?.contactUs?.email || "contact@cfour.com"}`}
               className="flex items-center gap-3 hover:text-red-700 transition-colors duration-200"
             >
               <RiMailLine size={22} />
-              <span>contact@cfour.com</span>
+              <span>{footerData?.contactUs?.email || "contact@cfour.com"}</span>
             </a>
 
             <div className="flex items-center gap-3">
               <RiTimeLine size={22} />
 
-              <span>Mon–Sun | 10AM–7PM</span>
+              <span>{footerData?.contactUs?.hours || "Mon–Sun | 10AM–7PM"}</span>
             </div>
           </div>
         </div>
@@ -335,7 +389,7 @@ export default function Footer() {
           lg:text-[20px]
         "
       >
-        <p>© 2026 C⚡FOUR. All Rights Reserved.</p>
+        <p>{footerData?.copyrightText || "© 2026 C⚡FOUR. All Rights Reserved."}</p>
 
         <p>Designed for smarter living.</p>
       </div>

@@ -43,17 +43,13 @@ function Counter({ end, suffix = "", duration = 2000, startAnimation }) {
   );
 }
 
-import { useQuery } from "@tanstack/react-query";
-import { getPublicPage } from "../api/contentApi";
+import { useStore } from "../context/StoreContext";
 
 export default function About() {
   const statsRef = useRef(null);
   const [startCount, setStartCount] = useState(false);
 
-  const { data: pageData, isLoading, isError } = useQuery({
-    queryKey: ["content", "about-us"],
-    queryFn: () => getPublicPage("about-us"),
-  });
+  const { aboutUs, loading } = useStore();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -225,33 +221,35 @@ export default function About() {
               />
 
               <div>
-                <h2
-                  className="
-                    text-[34px]
-                    font-bold
-                    leading-tight
+                  <h2
+                    className="
+                      text-[34px]
+                      font-bold
+                      leading-tight
 
-                    text-white
+                      text-white
 
-                    lg:text-[48px]
-                  "
-                >
-                  {pageData?.title || ""}
-                </h2>
+                      lg:text-[48px]
+                    "
+                  >
+                    {aboutUs?.title || ""}
+                  </h2>
 
-                <h2
-                  className="
-                    text-[30px]
-                    font-bold
-                    leading-tight
+                  {aboutUs?.subtitle && (
+                    <h2
+                      className="
+                        text-[30px]
+                        font-bold
+                        leading-tight
 
-                    text-white
+                        text-white
 
-                    lg:text-[44px]
-                  "
-                >
-                  {pageData?.subtitle || ""}
-                </h2>
+                        lg:text-[44px]
+                      "
+                    >
+                      {aboutUs?.subtitle}
+                    </h2>
+                  )}
 
                 <p
                   className="
@@ -272,8 +270,8 @@ export default function About() {
 
             <div className="mt-8 overflow-hidden rounded-[24px]">
               <img
-                src={leftImg}
-                alt="Living Room"
+                src={aboutUs?.image || aboutUs?.imageUrl || leftImg}
+                alt="About"
                 className="
                   h-full
                   w-full
@@ -364,7 +362,7 @@ export default function About() {
             {/* TEXT */}
 
             <div className="mt-6">
-              {isLoading ? (
+              {loading ? (
                 <div className="animate-pulse space-y-3">
                   <div className="h-4 bg-gray-600 rounded w-full"></div>
                   <div className="h-4 bg-gray-600 rounded w-full"></div>
@@ -373,11 +371,10 @@ export default function About() {
                 </div>
               ) : (
                 <div 
-                  className="text-[18px] leading-[1.8] text-gray-200 lg:text-[22px] prose prose-invert"
-                  dangerouslySetInnerHTML={{ __html: pageData?.body || `
-                    <p>Content coming soon. The store administrator is currently updating this page.</p>
-                  `}}
-                />
+                  className="text-[18px] leading-[1.8] text-gray-200 lg:text-[22px]"
+                >
+                  {aboutUs?.description || "Content coming soon. The store administrator is currently updating this page."}
+                </div>
               )}
             </div>
 

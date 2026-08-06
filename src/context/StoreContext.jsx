@@ -10,6 +10,7 @@ export const StoreProvider = ({ children }) => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [aboutUs, setAboutUs] = useState(null);
   const [footerData, setFooterData] = useState(null);
+  const [socialLinks, setSocialLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [storeLoaded, setStoreLoaded] = useState(false);
   const [error, setError] = useState(null);
@@ -39,6 +40,9 @@ export const StoreProvider = ({ children }) => {
       if (raw.footer) {
         setFooterData(raw.footer);
       }
+      if (raw.socialLinks) {
+        setSocialLinks(raw.socialLinks);
+      }
       
       setStoreLoaded(true);
     } catch (err) {
@@ -61,6 +65,7 @@ export const StoreProvider = ({ children }) => {
       featuredProducts,
       aboutUs,
       footerData,
+      socialLinks,
       loading,
       error,
       refreshStore: () => {

@@ -340,23 +340,18 @@ function PremiumSection({
 
 import { useStore } from "../context/StoreContext";
 import { useQuery } from "@tanstack/react-query";
-import { getPublicBanners, getPublicCampaigns } from "../api/marketingApi";
+import { getPublicCampaigns } from "../api/marketingApi";
 import { Link } from "react-router-dom";
 
 export default function Home() {
-  const { newArrivals, loading, error } = useStore();
-
-  const { data: banners, isLoading: bannersLoading, isError: bannersError } = useQuery({
-    queryKey: ["marketing", "banners"],
-    queryFn: getPublicBanners,
-  });
+  const { banners, newArrivals, loading, error } = useStore();
 
   const { data: campaigns, isLoading: campaignsLoading, isError: campaignsError } = useQuery({
     queryKey: ["marketing", "campaigns"],
     queryFn: getPublicCampaigns,
   });
 
-  if (loading || bannersLoading || campaignsLoading) {
+  if (loading || campaignsLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-black">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
@@ -389,8 +384,8 @@ export default function Home() {
 
           bg-[#d9d9d9]
         "
-        style={featuredBanner?.image ? {
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${featuredBanner.image})`,
+        style={featuredBanner?.imageUrl || featuredBanner?.image ? {
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${featuredBanner.imageUrl || featuredBanner.image})`,
           backgroundSize: "cover",
           backgroundPosition: "center"
         } : undefined}
@@ -400,7 +395,7 @@ export default function Home() {
             className={`
               text-[34px]
               font-bold
-              ${featuredBanner?.imageUrl ? "text-white" : "text-[#111]"}
+              ${featuredBanner?.image ? "text-white" : "text-[#111]"}
 
               md:text-[48px]
 
@@ -416,7 +411,7 @@ export default function Home() {
 
               text-[18px]
               font-semibold
-              ${featuredBanner?.imageUrl ? "text-gray-200" : "text-[#555]"}
+              ${featuredBanner?.image ? "text-gray-200" : "text-[#555]"}
 
               md:text-[24px]
 
@@ -426,10 +421,10 @@ export default function Home() {
             {featuredBanner?.subtitle || "Premium Electrical & Piping Solutions"}
           </p>
           
-          {featuredBanner?.linkUrl && (
-            <Link to={featuredBanner.linkUrl}>
+          {featuredBanner?.link && (
+            <Link to={featuredBanner.link}>
               <button className="mt-8 rounded-full bg-white px-8 py-4 text-[16px] font-medium uppercase tracking-wide text-black transition-all hover:-translate-y-1 hover:bg-gray-200">
-                Shop Now
+                {featuredBanner?.ctaText || "Shop Now"}
               </button>
             </Link>
           )}

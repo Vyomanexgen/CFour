@@ -9,23 +9,29 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.webp";
 import { useAuth } from "../context/AuthContext";
 
-/* MEGA MENU CATEGORIES (Enhanced with Icons) */
-const megaMenuCategories = [
-  { title: "Pipes", category: "pipes", icon: Cylinder, sub: ["PVC Pipes", "CPVC Pipes", "HDPE Pipes", "UPVC Pipes"] },
-  { title: "Lights", category: "lights", icon: Lightbulb, sub: ["LED Bulbs", "Ceiling Lights", "Panel Lights", "Outdoor Lights"] },
-  { title: "Switches", category: "switches", icon: ToggleRight, sub: ["Modular Switches", "Touch Switches", "Smart Switches"] },
-  { title: "Wires", category: "wires", icon: Cable, sub: ["Copper Wire", "Flexible Wire", "Industrial Wire"] },
-  { title: "MCBS & DBS", category: "mcbs", icon: Zap, sub: ["MCB", "Distribution Boards"] },
-  { title: "Plumbing", category: "plumbing", icon: Wrench, sub: ["Pipe Fittings", "Valves", "Connectors"] },
-  { title: "Accessories", category: "accessories", icon: Plug, sub: ["Adapters", "Sockets", "Holders"] },
-  { title: "Agriculture", category: "agriculture", icon: Sprout, sub: ["Sprinklers", "Pumps", "Pipe Systems"] },
-  { title: "Industrial", category: "industrial", icon: Factory, sub: ["Heavy Pipes", "Industrial Fittings"] },
-  { title: "Drainage", category: "drainage", icon: Droplets, sub: ["Drain Pipes", "Drain Covers"] },
-  { title: "All Products", category: "all", icon: LayoutGrid, sub: [] },
-];
+import { useStore } from "../context/StoreContext";
+
+/* ICON MAPPER STRATEGY */
+const getCategoryIcon = (slug) => {
+  const iconMap = {
+    "pipes": Cylinder,
+    "lights": Lightbulb,
+    "switches": ToggleRight,
+    "wires": Cable,
+    "mcbs": Zap,
+    "plumbing": Wrench,
+    "accessories": Plug,
+    "agriculture": Sprout,
+    "industrial": Factory,
+    "drainage": Droplets,
+    "all": LayoutGrid
+  };
+  return iconMap[slug.toLowerCase()] || LayoutGrid; // Generic fallback icon
+};
 
 export default function Navbar({ cartCount = 0 }) {
   const { user, logout } = useAuth();
+  const { categories: dynamicCategories } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -53,6 +59,22 @@ export default function Navbar({ cartCount = 0 }) {
   const megaMenuRef = useRef(null);
   const firstLinkRef = useRef(null);
   const searchInputRef = useRef(null);
+
+  // BUILD DYNAMIC MENU
+  // Convert API categories to the expected format. If empty, fallback to just "All Products"
+  const megaMenuCategories = dynamicCategories?.length > 0 
+    ? [
+        ...dynamicCategories.map(c => ({
+          title: c.name,
+          category: c.slug,
+          icon: getCategoryIcon(c.slug),
+          sub: [] // API doesn't have subcategories yet, so we leave empty
+        })),
+        { title: "All Products", category: "all", icon: LayoutGrid, sub: [] }
+      ]
+    : [
+        { title: "All Products", category: "all", icon: LayoutGrid, sub: [] }
+      ];
 
   /* BREADCRUMB */
   const params = new URLSearchParams(location.search);

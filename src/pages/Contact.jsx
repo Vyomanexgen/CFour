@@ -1,15 +1,46 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { RiMapPinFill, RiPhoneFill, RiMailFill } from "@remixicon/react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { getPublicPage } from "../api/contentApi";
+import { submitContactUsForm } from "../api/storefrontApi";
+import { useToast } from "../context/ToastContext";
 
 import topImg from "../assets/contactUs/top.webp";
 
 export default function Contact() {
+  const toast = useToast();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: ""
+  });
+
   const { data: pageData, isLoading } = useQuery({
     queryKey: ["content", "contact-us"],
     queryFn: () => getPublicPage("contact-us"),
   });
+
+  const mutation = useMutation({
+    mutationFn: submitContactUsForm,
+    onSuccess: () => {
+      toast.success("Message sent successfully!");
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    },
+    onError: () => {
+      toast.error("Failed to send message. Please try again.");
+    }
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+    mutation.mutate(formData);
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -389,6 +420,7 @@ export default function Contact() {
           </div>
 
           <form
+            onSubmit={handleSubmit}
             className="
               mt-12
 
@@ -411,11 +443,14 @@ export default function Contact() {
                   text-gray-300
                 "
               >
-                Full Name
+                Full Name *
               </label>
 
               <input
                 type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Enter your name"
                 className="
                   rounded-xl
@@ -452,11 +487,14 @@ export default function Contact() {
                   text-gray-300
                 "
               >
-                Email Address
+                Email Address *
               </label>
 
               <input
                 type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="Enter your email"
                 className="
                   rounded-xl
@@ -498,6 +536,8 @@ export default function Contact() {
 
               <input
                 type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="Enter your phone number"
                 className="
                   rounded-xl
@@ -539,6 +579,8 @@ export default function Contact() {
 
               <input
                 type="text"
+                value={formData.subject}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 placeholder="Enter subject"
                 className="
                   rounded-xl
@@ -575,11 +617,14 @@ export default function Contact() {
                   text-gray-300
                 "
               >
-                Message
+                Message *
               </label>
 
               <textarea
                 rows="6"
+                required
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 placeholder="Write your message..."
                 className="
                   resize-none
@@ -610,6 +655,7 @@ export default function Contact() {
             <div className="md:col-span-2 flex justify-center">
               <button
                 type="submit"
+                disabled={mutation.isPending}
                 className="
                   rounded-full
 
@@ -630,9 +676,12 @@ export default function Contact() {
 
                   hover:-translate-y-2
                   hover:bg-red-700
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
+                  disabled:hover:translate-y-0
                 "
               >
-                Send Message
+                {mutation.isPending ? "Sending..." : "Send Message"}
               </button>
             </div>
           </form>
