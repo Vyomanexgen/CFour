@@ -392,30 +392,33 @@ export default function Home() {
       >
         <div className="text-center max-w-[800px] px-6 text-white">
           <h1
+            style={{ fontFamily: "'Great Vibes', cursive" }}
             className={`
-              text-[34px]
-              font-bold
+              text-[48px]
+              font-semibold
               ${featuredBanner?.image ? "text-white" : "text-[#111]"}
 
-              md:text-[48px]
+              md:text-[64px]
 
-              lg:text-[58px]
+              lg:text-[86px]
             `}
           >
             {featuredBanner?.title || "Welcome to CFOUR"}
           </h1>
 
           <p
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}
             className={`
               mt-5
 
-              text-[18px]
+              text-[22px]
               font-semibold
+              italic
               ${featuredBanner?.image ? "text-gray-200" : "text-[#555]"}
 
-              md:text-[24px]
+              md:text-[28px]
 
-              lg:text-[32px]
+              lg:text-[36px]
             `}
           >
             {featuredBanner?.subtitle || "Premium Electrical & Piping Solutions"}
@@ -423,8 +426,11 @@ export default function Home() {
           
           {featuredBanner?.link && (
             <Link to={featuredBanner.link}>
-              <button className="mt-8 rounded-full bg-white px-8 py-4 text-[16px] font-medium uppercase tracking-wide text-black transition-all hover:-translate-y-1 hover:bg-gray-200">
-                {featuredBanner?.ctaText || "Shop Now"}
+              <button 
+                style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                className="mt-8 rounded-full bg-white px-10 py-4 text-[18px] font-semibold uppercase tracking-[2px] text-black transition-all hover:-translate-y-1 hover:bg-gray-200"
+              >
+                {featuredBanner?.ctaText || "SHOP NOW"}
               </button>
             </Link>
           )}
