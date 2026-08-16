@@ -341,7 +341,7 @@ function VariantDetailsModal({
 }
 
 /* ── AMAZON-STYLE GROUP CARD (one card per product, dropdown if multiple variants) ── */
-function AmazonStyleGroupCard({ image, title, variants, onAddToCart, product, onQuickView }) {
+function AmazonStyleGroupCard({ image, title, variants, onAddToCart, product, onQuickView, onViewDetails }) {
   const [showDetails, setShowDetails] = useState(false);
   const hasMultipleVariants = variants.length > 1;
   const first = variants[0];
@@ -488,33 +488,35 @@ function AmazonStyleGroupCard({ image, title, variants, onAddToCart, product, on
             <span className="text-gray-500">in 2-4 days</span>
           </p>
 
-          {/* VIEW DETAILS — only if multiple variants exist */}
-          {hasMultipleVariants && (
-            <button
-              onClick={() => setShowDetails(true)}
-              className="
-                w-full
-                border
-                border-gray-300
-                text-gray-700
-                text-sm
-                font-medium
-                py-2
-                rounded-full
-                hover:bg-gray-50
-                hover:border-gray-400
-                transition
-                focus:outline-none
-                focus:ring-2
-                focus:ring-gray-300
-                min-h-[40px]
-                cursor-pointer
-                mb-2
-              "
-            >
-              View Details
-            </button>
-          )}
+          {/* VIEW DETAILS — ALWAYS SHOW */}
+          <button
+            onClick={() => {
+              if (onViewDetails) {
+                onViewDetails(product);
+              }
+            }}
+            className="
+              w-full
+              border
+              border-gray-300
+              text-gray-700
+              text-sm
+              font-medium
+              py-2
+              rounded-full
+              hover:bg-gray-50
+              hover:border-gray-400
+              transition
+              focus:outline-none
+              focus:ring-2
+              focus:ring-gray-300
+              min-h-[40px]
+              cursor-pointer
+              mb-2
+            "
+          >
+            View Details
+          </button>
 
           {/* CTA */}
           <button
@@ -563,6 +565,7 @@ function AmazonStyleGroupCard({ image, title, variants, onAddToCart, product, on
 
 import { getStorefrontProducts, searchStorefrontProducts } from "../api/storefrontApi";
 import { getProductReviews, submitReview } from "../api/reviewsApi";
+import { getProductDetails } from "../api/storefrontApi";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCart } from "../context/CartContext";
 import { useToast } from "../context/ToastContext";
@@ -609,6 +612,25 @@ export default function Products() {
   const [activeTab, setActiveTab] = useState("Specifications");
   const [selectedColor, setSelectedColor] = useState("green");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const deepLinkProductId = params.get("productId");
+
+  useEffect(() => {
+    if (deepLinkProductId) {
+      const fetchDeepLinkProduct = async () => {
+        try {
+          const res = await getProductDetails(deepLinkProductId);
+          const product = res.data || res;
+          if (product && (product._id || product.id)) {
+            setSelectedProduct(product);
+          }
+        } catch (err) {
+          console.error("Failed to fetch deep linked product:", err);
+        }
+      };
+      fetchDeepLinkProduct();
+    }
+  }, [deepLinkProductId]);
 
   /* ── NEW STATE ── */
   const [productsList, setProductsList] = useState([]);
@@ -2453,7 +2475,7 @@ export default function Products() {
       )}
 
       {/* SPECIFIC CATEGORY VIEW (UNIFIED GRID) */}
-      {selectedCategory !== "all" && (
+      {selectedCategory !== "all" && !selectedProduct && (
         <>
           <section className="w-full bg-black overflow-hidden pt-[85px]">
             <img
@@ -2464,8 +2486,11 @@ export default function Products() {
           </section>
           <section className="w-full bg-[#efefef] pt-10 pb-10 min-h-[60vh]">
            <div className="max-w-7xl mx-auto px-6">
-             <div className="flex items-center justify-between mb-8">
-               <h2 className="text-3xl sm:text-4xl font-semibold uppercase">
+             <div className="flex items-center justify-center mb-8 text-center">
+               <h2 
+                 className="text-3xl sm:text-4xl font-semibold uppercase"
+                 style={{ fontFamily: "'Cormorant Garamond', serif" }}
+               >
                  {matchedCategory ? matchedCategory.name : selectedCategory}
                </h2>
              </div>
@@ -2494,6 +2519,7 @@ export default function Products() {
                          onAddToCart={addToCart}
                          product={product}
                          onQuickView={setQuickViewProduct}
+                         onViewDetails={() => handleViewDetails(product)}
                        />
                      );
                    })}
@@ -2536,11 +2562,8 @@ export default function Products() {
         </>
       )}
 
-      {/* ALL PRODUCTS (GENERIC GRID WITH SIDEBAR) */}
-      {selectedCategory === "all" && (
-        <>
-          {/* PRODUCT DETAIL FULL VIEW */}
-          {selectedProduct && (
+      {/* PRODUCT DETAIL FULL VIEW */}
+      {selectedProduct && (
             <section
               ref={detailRef}
               className="w-full bg-[#efefef] pt-[120px] pb-10 px-6"
@@ -2552,7 +2575,7 @@ export default function Products() {
                     onClick={handleBack}
                     className="hover:text-black transition focus:outline-none focus:underline cursor-pointer"
                   >
-                    All Products
+                    {matchedCategory ? matchedCategory.name : (selectedCategory === 'all' ? 'All Products' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1))}
                   </button>
                   <span>/</span>
                   <span className="text-black font-medium">
@@ -2651,44 +2674,36 @@ export default function Products() {
                       </div>
                     )}
 
-                    {/* SPECS */}
+                    {/* SPECS - Summary */}
                     <div className="space-y-1 text-gray-700 mb-4 text-left">
                       {selectedProduct.code && (
                         <p>
                           <span className="font-semibold">Code / SKU:</span> {selectedProduct.code}
                         </p>
                       )}
-                      {selectedProduct.attributes && selectedProduct.attributes.length > 0 ? (
-                        selectedProduct.attributes.map((attr, idx) => (
-                          <p key={idx}>
-                            <span className="font-semibold capitalize">{attr.key}:</span> <span className="capitalize">{attr.value}</span>
-                          </p>
-                        ))
-                      ) : (
-                        <>
-                          {selectedProduct.size && (
-                            <p>
-                              <span className="font-semibold">Size:</span> {selectedProduct.size}
-                            </p>
-                          )}
-                          {selectedProduct.color && (
-                            <p>
-                              <span className="font-semibold">Colour:</span> <span className="capitalize">{selectedProduct.color}</span>
-                            </p>
-                          )}
-                          {selectedProduct.material && (
-                            <p>
-                              <span className="font-semibold">Material:</span> <span className="capitalize">{selectedProduct.material}</span>
-                            </p>
-                          )}
-                        </>
+                      {selectedProduct.size && (
+                        <p>
+                          <span className="font-semibold">Size:</span> {selectedProduct.size}
+                        </p>
+                      )}
+                      {selectedProduct.color && (
+                        <p>
+                          <span className="font-semibold">Colour:</span> <span className="capitalize">{selectedProduct.color}</span>
+                        </p>
+                      )}
+                      {selectedProduct.material && (
+                        <p>
+                          <span className="font-semibold">Material:</span> <span className="capitalize">{selectedProduct.material}</span>
+                        </p>
                       )}
                     </div>
 
                     {/* PRICE + BUTTONS */}
                     <div className="mb-6">
-                      <p className="text-2xl font-bold mb-3">
-                        ₹{typeof selectedProduct.price === 'number' ? selectedProduct.price.toLocaleString("en-IN") : (selectedProduct.price || "67.00")}
+                      <p className="text-2xl font-bold mb-3 flex items-center gap-2">
+                        <span className="text-gray-900">
+                           ₹{((selectedProduct.variants?.[0] || selectedProduct.defaultVariant)?.offerPrice || (selectedProduct.variants?.[0] || selectedProduct.defaultVariant)?.originalPrice || selectedProduct.price || 0).toLocaleString("en-IN")}
+                        </span>
                         <span className="text-sm font-normal text-gray-500 ml-1">
                           /piece
                         </span>
@@ -2770,9 +2785,6 @@ export default function Products() {
                       <div className="flex gap-4 min-w-max">
                         {[
                           "Specifications",
-                          "Datasheets",
-                          "Certifications",
-                          "Applications",
                           "Reviews"
                         ].map((tab) => (
                           <button
@@ -2798,55 +2810,23 @@ export default function Products() {
 
                     {/* TAB CONTENT - SPECIFICATIONS */}
                     {activeTab === "Specifications" && (
-                      <table className="w-full text-sm border border-gray-200">
-                        <tbody>
-                          {selectedProduct.attributes && selectedProduct.attributes.length > 0 ? (
-                            selectedProduct.attributes.map((row, i) => (
-                              <tr key={i} className="border-b border-gray-200">
-                                <td className="py-2 px-3 text-gray-600 bg-gray-50 w-1/2 capitalize">
-                                  {row.key}
-                                </td>
-                                <td className="py-2 px-3">{row.value}</td>
-                              </tr>
-                            ))
-                          ) : (
-                            [
-                              { label: "Outer Diameter (mm)", value: "110" },
-                              { label: "Wall Thickness (mm)", value: "4.2" },
-                              { label: "Nominal Pressure (PN)", value: "16" },
-                              { label: "Standard", value: "ISO 1452-2" },
-                              { label: "Tensile Strength", value: "50 MPa" },
-                              { label: "Impact Strength", value: "5 kJ/m²" },
-                              {
-                                label: "Chemical Resistance",
-                                value: "Excellent",
-                              },
-                            ].map((row, i) => (
-                              <tr key={i} className="border-b border-gray-200">
-                                <td className="py-2 px-3 text-gray-600 bg-gray-50 w-1/2">
-                                  {row.label}
-                                </td>
-                                <td className="py-2 px-3">{row.value}</td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    )}
-
-                    {activeTab === "Datasheets" && (
-                      <div className="text-sm text-gray-600 py-4">
-                        Datasheet content will be available here.
-                      </div>
-                    )}
-                    {activeTab === "Certifications" && (
-                      <div className="text-sm text-gray-600 py-4">
-                        Certification details will be available here.
-                      </div>
-                    )}
-                    {activeTab === "Applications" && (
-                      <div className="text-sm text-gray-600 py-4">
-                        Application details will be available here.
+                      <div className="mb-4">
+                        {selectedProduct.attributes && selectedProduct.attributes.filter(row => row.key.toLowerCase() !== 'default').length > 0 ? (
+                          <table className="w-full text-sm border border-gray-200">
+                            <tbody>
+                              {selectedProduct.attributes.filter(row => row.key.toLowerCase() !== 'default').map((row, i) => (
+                                <tr key={i} className="border-b border-gray-200">
+                                  <td className="py-2 px-3 text-gray-600 bg-gray-50 w-1/2 capitalize">
+                                    {row.key}
+                                  </td>
+                                  <td className="py-2 px-3">{row.value}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        ) : (
+                          <p className="text-sm text-gray-500 py-4">No detailed specifications available for this product.</p>
+                        )}
                       </div>
                     )}
                     
@@ -3065,8 +3045,8 @@ export default function Products() {
             </section>
           )}
 
-          {/* ALL PRODUCTS GRID VIEW */}
-          {!selectedProduct && (
+      {/* ALL PRODUCTS GRID VIEW */}
+      {selectedCategory === "all" && !selectedProduct && (
             <section className="w-full bg-[#efefef] pt-[105px] pb-10">
               {/* TOP IMAGE */}
               <div className="px-6 mb-10">
@@ -3177,7 +3157,10 @@ export default function Products() {
                             </div>
 
                             {/* IMAGE */}
-                            <div className="bg-gray-50 relative overflow-hidden">
+                            <div 
+                              className="bg-gray-50 relative overflow-hidden cursor-pointer"
+                              onClick={() => handleViewDetails(item)}
+                            >
                               <img
                                 src={itemImage}
                                 alt={item.name}
@@ -3196,7 +3179,10 @@ export default function Products() {
                               {/* QUICK VIEW OVERLAY */}
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                                 <button
-                                  onClick={() => setQuickViewProduct(item)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setQuickViewProduct(item);
+                                  }}
                                   className="
                                     bg-white
                                     text-gray-800
@@ -3260,33 +3246,6 @@ export default function Products() {
                                 </p>
 
                                 <div className="grid grid-cols-1 gap-1.5">
-                                  <button
-                                    onClick={() => handleViewDetails(item)}
-                                    className="
-                                      w-full
-                                      border
-                                      border-gray-300
-                                      text-gray-600
-                                      px-2
-                                      py-1.5
-                                      rounded-lg
-                                      text-xs
-                                      font-medium
-                                      hover:border-red-400
-                                      hover:text-red-500
-                                      hover:bg-red-50
-                                      transition-all
-                                      duration-200
-                                      focus:outline-none
-                                      focus:ring-2
-                                      focus:ring-red-300
-                                      min-h-[36px]
-                                      cursor-pointer
-                                    "
-                                  >
-                                    View Details
-                                  </button>
-
                                   <button
                                     onClick={() => {
                                       if (inStockVal && defaultVariant) {
@@ -3433,8 +3392,6 @@ export default function Products() {
               </div>
             </section>
           )}
-        </>
-      )}
     </>
   );
 }

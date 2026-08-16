@@ -19,7 +19,9 @@ export const ConfigProvider = ({ children }) => {
       console.log("[ConfigContext] Config loaded successfully from backend:", configData);
       setConfig(configData);
     } catch (err) {
-      console.error("Failed to load organization configuration", err);
+      if (err.response?.status !== 404) {
+        console.error("Failed to load organization configuration", err);
+      }
       setError(err);
     } finally {
       setLoading(false);

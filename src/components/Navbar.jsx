@@ -31,14 +31,14 @@ const getCategoryIcon = (slug) => {
 
 export default function Navbar({ cartCount = 0 }) {
   const { user, logout } = useAuth();
-  const { categories: dynamicCategories } = useStore();
+  const { categories: dynamicCategories, navItems } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Mobile Drawer State
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileProductsOpen, setMobileProductsOpen] = useState(false); // Track if Products accordion is open
-  const [mobileAccordion, setMobileAccordion] = useState(null); // track expanded category id
+  const [mobileOpenMenu, setMobileOpenMenu] = useState(null); // Track which top-level accordion is open
+  const [mobileAccordion, setMobileAccordion] = useState(null); // track expanded sub-category id
   
   // Cart bump animation
   const [bump, setBump] = useState(false);
@@ -48,10 +48,10 @@ export default function Navbar({ cartCount = 0 }) {
   const [search, setSearch] = useState("");
 
   // Desktop Mega Menu State
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const [activeFlyout, setActiveFlyout] = useState(null);
   
-  // Timers for 150ms delay
+  // Timers for hover delay
   const enterTimer = useRef(null);
   const leaveTimer = useRef(null);
 
@@ -96,15 +96,15 @@ export default function Navbar({ cartCount = 0 }) {
     const onKey = (e) => {
       if (e.key === "Escape") {
         if (mobileOpen) setMobileOpen(false);
-        if (menuOpen) {
-          setMenuOpen(false);
+        if (openDropdown) {
+          setOpenDropdown(null);
           setActiveFlyout(null);
         }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mobileOpen, menuOpen]);
+  }, [mobileOpen, openDropdown]);
 
   /* LOCK BODY SCROLL FOR MOBILE MENU */
   useEffect(() => {
@@ -128,23 +128,23 @@ export default function Navbar({ cartCount = 0 }) {
   };
 
   /* MEGA MENU HOVER DELAY LOGIC */
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (dropdownName) => {
     clearTimeout(leaveTimer.current);
     enterTimer.current = setTimeout(() => {
-      setMenuOpen(true);
+      setOpenDropdown(dropdownName);
     }, 150);
   };
   const handleMouseLeave = () => {
     clearTimeout(enterTimer.current);
     leaveTimer.current = setTimeout(() => {
-      setMenuOpen(false);
+      setOpenDropdown(null);
       setActiveFlyout(null); // close flyouts too
     }, 150);
   };
 
   /* KEYBOARD NAVIGATION FOR MEGA MENU */
   const handleMegaMenuKeyDown = (e) => {
-    if (!menuOpen) return;
+    if (!openDropdown) return;
     
     // Simplistic arrow key support for accessibility
     const items = Array.from(megaMenuRef.current?.querySelectorAll('button[role="menuitem"]') || []);
@@ -227,149 +227,159 @@ export default function Navbar({ cartCount = 0 }) {
 
           {/* DESKTOP NAV */}
           <nav className="hidden lg:flex items-center gap-8 h-full">
-            <NavLink to="/" className={navLinkStyle}>Home</NavLink>
+            {(navItems?.length > 0 ? navItems : [
+              { name: "Home", url: "/" },
+              { name: "Products", url: "/products" },
+              { name: "About Us", url: "/about" },
+              { name: "New Arrivals", url: "/new-arrivals" },
+              { name: "Contact Us", url: "/contact" }
+            ]).map((item) => {
+              if (item.subItems && item.subItems.length > 0) {
+                const isOpen = openDropdown === item.name;
+                return (
+                  <div 
+                    key={item.name}
+                    className="group flex items-center h-full"
+                    onMouseEnter={() => handleMouseEnter(item.name)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <button 
+                      onClick={() => navigate(item.url)}
+                      onKeyDown={(e) => { if(e.key === "Enter") navigate(item.url); }}
+                      className={`
+                        relative inline-flex items-center text-[15px] font-medium pb-[6px] 
+                        transition-all duration-300 hover:text-[#8b0000] cursor-pointer border-none bg-transparent
+                        after:absolute after:left-0 after:-bottom-[4px] after:h-[3px] 
+                        after:rounded-full after:bg-[#8b0000] after:transition-all after:duration-300 
+                        after:ease-out after:origin-left outline-none
+                        ${isOpen ? "text-[#8b0000] after:w-full" : "text-[#111] after:w-0"}
+                      `}
+                      aria-expanded={isOpen}
+                      aria-haspopup="true"
+                    >
+                      {item.name}
+                    </button>
 
-            {/* PRODUCTS MEGA MENU TRIGGER */}
-            <div 
-              className="group flex items-center h-full"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button 
-                onClick={() => navigate("/products")}
-                onKeyDown={(e) => { if(e.key === "Enter") navigate("/products"); }}
-                className={`
-                  relative inline-flex items-center text-[15px] font-medium pb-[6px] 
-                  transition-all duration-300 hover:text-[#8b0000] cursor-pointer border-none bg-transparent
-                  after:absolute after:left-0 after:-bottom-[4px] after:h-[3px] 
-                  after:rounded-full after:bg-[#8b0000] after:transition-all after:duration-300 
-                  after:ease-out after:origin-left outline-none
-                  ${menuOpen || isProductsPage ? "text-[#8b0000] after:w-full" : "text-[#111] after:w-0"}
-                `}
-                aria-expanded={menuOpen}
-                aria-haspopup="true"
-              >
-                Products
-              </button>
+                    {/* DESKTOP/TABLET MEGA MENU DROPDOWN */}
+                    <div
+                      ref={megaMenuRef}
+                      onKeyDown={handleMegaMenuKeyDown}
+                      className={`
+                        absolute
+                        left-0 right-0 mx-auto
+                        top-full
+                        w-[90vw]
+                        max-w-[1100px]
+                        bg-white
+                        rounded-b-2xl
+                        shadow-[0_10px_40px_rgba(0,0,0,0.1)]
+                        border-t
+                        border-gray-100
+                        transition-all
+                        duration-300
+                        ease-out
+                        z-50
+                        flex flex-col
+                        ${isOpen 
+                          ? "opacity-100 visible translate-y-0" 
+                          : "opacity-0 invisible -translate-y-2"}
+                      `}
+                    >
+                      <div className="p-8 xl:p-10 pb-12 w-full">
+                        {/* Grid layout: 4 cols on tablet (lg), 11 cols on desktop (xl) to make a single row */}
+                        <div className="grid grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-x-2 gap-y-10" role="menu">
+                          {item.subItems.map((subItem) => {
+                            const Icon = LayoutGrid; // Generic fallback for dynamic items
+                            const isFlyoutOpen = activeFlyout === subItem.name;
 
-              {/* DESKTOP/TABLET MEGA MENU DROPDOWN */}
-              <div
-                ref={megaMenuRef}
-                onKeyDown={handleMegaMenuKeyDown}
-                className={`
-                  absolute
-                  left-0 right-0 mx-auto
-                  top-full
-                  w-[90vw]
-                  max-w-[1100px]
-                  bg-white
-                  rounded-b-2xl
-                  shadow-[0_10px_40px_rgba(0,0,0,0.1)]
-                  border-t
-                  border-gray-100
-                  transition-all
-                  duration-300
-                  ease-out
-                  z-50
-                  flex flex-col
-                  ${menuOpen 
-                    ? "opacity-100 visible translate-y-0" 
-                    : "opacity-0 invisible -translate-y-2"}
-                `}
-              >
-                <div className="p-8 xl:p-10 pb-12 w-full">
-                  {/* Grid layout: 4 cols on tablet (lg), 11 cols on desktop (xl) to make a single row */}
-                  <div className="grid grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-x-2 gap-y-10" role="menu">
-                    {megaMenuCategories.map((item) => {
-                      const Icon = item.icon;
-                      const isFlyoutOpen = activeFlyout === item.category;
-
-                      return (
-                        <div 
-                          key={item.title} 
-                          className="flex flex-col items-center group/item"
-                          onMouseEnter={() => setActiveFlyout(item.category)}
-                          onClick={() => {
-                            if (item.sub.length > 0 && activeFlyout !== item.category) {
-                              setActiveFlyout(item.category);
-                            } else {
-                              navigate(`/products?category=${item.category}`);
-                              setMenuOpen(false);
-                            }
-                          }}
-                        >
-                          <button
-                            role="menuitem"
-                            className="
-                              flex flex-col items-center justify-center gap-4
-                              w-full transition-all duration-300
-                              focus:outline-none cursor-pointer border-none bg-transparent
-                            "
-                          >
-                            <div className="
-                              w-[60px] h-[60px] xl:w-[64px] xl:h-[64px] rounded-2xl flex items-center justify-center
-                              transition-transform duration-300 group-hover/item:scale-[1.1] 
-                              group-focus/item:scale-[1.1]
-                            ">
-                              <Icon size={32} strokeWidth={1.5} className="text-gray-700 group-hover/item:text-red-600 group-focus/item:text-red-600 transition-colors" />
-                            </div>
-                            <div className="relative">
-                              <span className="text-[12px] xl:text-[13px] font-semibold text-center text-gray-800 group-hover/item:text-red-700 group-focus/item:text-red-700 transition-colors whitespace-nowrap">
-                                {item.title}
-                              </span>
-                              {/* Animated Red Underline */}
-                              <span className={`
-                                absolute left-1/2 -bottom-2 h-[2px] bg-red-600 -translate-x-1/2 transition-all duration-300 
-                                ${isFlyoutOpen ? 'w-full' : 'w-0 group-hover/item:w-full group-focus/item:w-full'}
-                              `}></span>
-                            </div>
-                          </button>
+                            return (
+                              <div 
+                                key={subItem.name} 
+                                className="flex flex-col items-center group/item"
+                                onMouseEnter={() => setActiveFlyout(subItem.name)}
+                                onClick={() => {
+                                  if (subItem.subItems && subItem.subItems.length > 0 && activeFlyout !== subItem.name) {
+                                    setActiveFlyout(subItem.name);
+                                  } else {
+                                    navigate(subItem.url);
+                                    setOpenDropdown(null);
+                                  }
+                                }}
+                              >
+                                <button
+                                  role="menuitem"
+                                  className="
+                                    flex flex-col items-center justify-center gap-4
+                                    w-full transition-all duration-300
+                                    focus:outline-none cursor-pointer border-none bg-transparent
+                                  "
+                                >
+                                  <div className="
+                                    w-[60px] h-[60px] xl:w-[64px] xl:h-[64px] rounded-2xl flex items-center justify-center
+                                    transition-transform duration-300 group-hover/item:scale-[1.1] 
+                                    group-focus/item:scale-[1.1]
+                                  ">
+                                    <Icon size={32} strokeWidth={1.5} className="text-gray-700 group-hover/item:text-red-600 group-focus/item:text-red-600 transition-colors" />
+                                  </div>
+                                  <div className="relative">
+                                    <span className="text-[12px] xl:text-[13px] font-semibold text-center text-gray-800 group-hover/item:text-red-700 group-focus/item:text-red-700 transition-colors whitespace-nowrap">
+                                      {subItem.name}
+                                    </span>
+                                    {/* Animated Red Underline */}
+                                    <span className={`
+                                      absolute left-1/2 -bottom-2 h-[2px] bg-red-600 -translate-x-1/2 transition-all duration-300 
+                                      ${isFlyoutOpen ? 'w-full' : 'w-0 group-hover/item:w-full group-focus/item:w-full'}
+                                    `}></span>
+                                  </div>
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                      </div>
 
-                {/* DYNAMIC SUBCATEGORY PANEL */}
-                {activeFlyout && megaMenuCategories.find(c => c.category === activeFlyout)?.sub.length > 0 && (
-                  <div className="border-t border-gray-100 bg-gray-50/80 rounded-b-2xl p-6 px-10 transition-all duration-300">
-                    <div className="flex items-center justify-center gap-6 flex-wrap">
-                      {megaMenuCategories.find(c => c.category === activeFlyout)?.sub.map((subItem) => (
-                        <Link
-                          key={subItem}
-                          to={`/products?category=${activeFlyout}`}
-                          onClick={() => {
-                            setMenuOpen(false);
-                            setActiveFlyout(null);
-                          }}
-                          className="
-                            px-6 py-2.5 text-sm font-semibold text-gray-700 hover:text-red-600 
-                            hover:bg-white rounded-full transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-gray-200 focus:outline-none focus:border-red-600
-                            no-underline bg-white
-                          "
-                        >
-                          {subItem}
-                        </Link>
-                      ))}
-                      <Link
-                        to={`/products?category=${activeFlyout}`}
-                        onClick={() => {
-                          setMenuOpen(false);
-                          setActiveFlyout(null);
-                        }}
-                        className="px-6 py-2.5 text-sm font-bold text-white bg-[#8b0000] hover:bg-[#6b0000] rounded-full transition-all shadow-sm focus:outline-none no-underline flex items-center gap-1"
-                      >
-                        View All {megaMenuCategories.find(c => c.category === activeFlyout)?.title} <ChevronRight size={16} />
-                      </Link>
+                      {/* DYNAMIC SUBCATEGORY PANEL */}
+                      {activeFlyout && item.subItems.find(c => c.name === activeFlyout)?.subItems?.length > 0 && (
+                        <div className="border-t border-gray-100 bg-gray-50/80 rounded-b-2xl p-6 px-10 transition-all duration-300">
+                          <div className="flex items-center justify-center gap-6 flex-wrap">
+                            {item.subItems.find(c => c.name === activeFlyout)?.subItems?.map((nestedItem) => (
+                              <Link
+                                key={nestedItem.name}
+                                to={nestedItem.url}
+                                onClick={() => {
+                                  setOpenDropdown(null);
+                                  setActiveFlyout(null);
+                                }}
+                                className="
+                                  px-6 py-2.5 text-sm font-semibold text-gray-700 hover:text-red-600 
+                                  hover:bg-white rounded-full transition-all shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-transparent hover:border-gray-200 focus:outline-none focus:border-red-600
+                                  no-underline bg-white
+                                "
+                              >
+                                {nestedItem.name}
+                              </Link>
+                            ))}
+                            <Link
+                              to={item.subItems.find(c => c.name === activeFlyout)?.url}
+                              onClick={() => {
+                                setOpenDropdown(null);
+                                setActiveFlyout(null);
+                              }}
+                              className="px-6 py-2.5 text-sm font-bold text-white bg-[#8b0000] hover:bg-[#6b0000] rounded-full transition-all shadow-sm focus:outline-none no-underline flex items-center gap-1"
+                            >
+                              View All {activeFlyout} <ChevronRight size={16} />
+                            </Link>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-
-            <NavLink to="/about" className={navLinkStyle}>About Us</NavLink>
-            <NavLink to="/new-arrivals" className={navLinkStyle}>New Arrivals</NavLink>
-            <NavLink to="/contact" className={navLinkStyle}>Contact Us</NavLink>
+                );
+              }
+              return (
+                <NavLink key={item.name} to={item.url} className={navLinkStyle}>{item.name}</NavLink>
+              );
+            })}
           </nav>
 
           {/* RIGHT SIDE TOOLS */}
@@ -484,128 +494,118 @@ export default function Navbar({ cartCount = 0 }) {
             {/* LINKS */}
             <nav className="flex flex-col flex-1" aria-label="Mobile navigation">
               
-              {/* HOME LINK */}
-              <div className="border-t border-b border-gray-300">
-                <Link ref={firstLinkRef} to="/" onClick={() => setMobileOpen(false)} className="flex items-center w-full px-6 md:px-8 py-4 text-[16px] font-normal text-black no-underline hover:text-red-600 transition-colors">
-                  Home
-                </Link>
-              </div>
-
-              {/* PRODUCTS ACCORDION (GM MODULAR STYLE) */}
-              <div className="flex flex-col border-b border-gray-300 shrink-0">
-                <button
-                  onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
-                  className="flex items-center justify-between w-full px-6 md:px-8 py-4 bg-transparent border-none cursor-pointer"
-                  aria-expanded={mobileProductsOpen}
-                >
-                  <div className="relative inline-block text-left">
-                    <span className={`text-[16px] font-normal transition-colors duration-300 ${mobileProductsOpen ? "text-red-600" : "text-black"}`}>
-                      Products
-                    </span>
-                    <div className={`absolute -bottom-[18px] left-0 h-[2px] bg-red-600 transition-all duration-300 ${mobileProductsOpen ? "w-full" : "w-0"}`} />
-                  </div>
-                  <ChevronDown size={20} className={`transition-transform duration-300 ${mobileProductsOpen ? "rotate-180 text-black" : "text-gray-500"}`} strokeWidth={1.5} />
-                </button>
-
-                {/* NESTED CATEGORIES (SMOOTH TRANSITION, FULL WIDTH GREY) */}
-                <div 
-                  className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out bg-[#f4f4f4] ${mobileProductsOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
-                >
-                  <div className="overflow-hidden">
-                    <div className="flex flex-col py-2">
-                      <Link
-                        to="/products"
-                        onClick={() => setMobileOpen(false)}
-                        className="w-full flex items-center px-6 md:px-8 py-3.5 text-[16px] font-medium text-black hover:text-red-600 no-underline transition-colors border-b border-gray-300/50"
+              {(navItems?.length > 0 ? navItems : [
+                { name: "Home", url: "/" },
+                { name: "Products", url: "/products" },
+                { name: "About Us", url: "/about" },
+                { name: "New Arrivals", url: "/new-arrivals" },
+                { name: "Contact Us", url: "/contact" }
+              ]).map((item, index) => {
+                
+                if (item.subItems && item.subItems.length > 0) {
+                  const isMenuOpen = mobileOpenMenu === item.name;
+                  return (
+                    <div key={item.name} className="flex flex-col border-b border-gray-300 shrink-0">
+                      <button
+                        onClick={() => setMobileOpenMenu(isMenuOpen ? null : item.name)}
+                        className="flex items-center justify-between w-full px-6 md:px-8 py-4 bg-transparent border-none cursor-pointer"
+                        aria-expanded={isMenuOpen}
                       >
-                        View All Products
-                      </Link>
-                      
-                      {megaMenuCategories.map((item) => {
-                        const Icon = item.icon;
-                        const isExpanded = mobileAccordion === item.category;
-                        const hasSub = item.sub.length > 0;
+                        <div className="relative inline-block text-left">
+                          <span className={`text-[16px] font-normal transition-colors duration-300 ${isMenuOpen ? "text-red-600" : "text-black"}`}>
+                            {item.name}
+                          </span>
+                          <div className={`absolute -bottom-[18px] left-0 h-[2px] bg-red-600 transition-all duration-300 ${isMenuOpen ? "w-full" : "w-0"}`} />
+                        </div>
+                        <ChevronDown size={20} className={`transition-transform duration-300 ${isMenuOpen ? "rotate-180 text-black" : "text-gray-500"}`} strokeWidth={1.5} />
+                      </button>
 
-                        return (
-                          <div key={item.category} className="flex flex-col border-b border-gray-300/50 last:border-none">
-                            <button
-                              onClick={() => {
-                                if (hasSub) {
-                                  setMobileAccordion(isExpanded ? null : item.category);
-                                } else {
-                                  navigate(`/products?category=${item.category}`);
-                                  setMobileOpen(false);
-                                }
-                              }}
-                              className="w-full flex items-center justify-between px-6 md:px-8 py-4 bg-transparent border-none cursor-pointer"
+                      {/* NESTED CATEGORIES */}
+                      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out bg-[#f4f4f4] ${isMenuOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                        <div className="overflow-hidden">
+                          <div className="flex flex-col py-2">
+                            <Link
+                              to={item.url}
+                              onClick={() => setMobileOpen(false)}
+                              className="w-full flex items-center px-6 md:px-8 py-3.5 text-[16px] font-medium text-black hover:text-red-600 no-underline transition-colors border-b border-gray-300/50"
                             >
-                              <div className="flex items-center gap-4">
-                                <div className="w-6 flex justify-center">
-                                  <Icon size={22} strokeWidth={1.2} className="text-black" />
-                                </div>
-                                <div className="relative flex flex-col items-start">
-                                  <span className="text-[17px] font-normal text-black">
-                                    {item.title}
-                                  </span>
-                                  <div className={`h-[2px] bg-red-600 absolute -bottom-[17px] left-0 transition-all duration-300 ${isExpanded ? "w-full" : "w-0"}`} />
-                                </div>
-                              </div>
-                              {hasSub && (
-                                <ChevronDown size={20} strokeWidth={1.5} className={`transition-transform duration-300 text-black ${isExpanded ? "rotate-180" : ""}`} />
-                              )}
-                            </button>
+                              View All {item.name}
+                            </Link>
+                            
+                            {item.subItems.map((subItem) => {
+                              const Icon = LayoutGrid; // Generic fallback icon
+                              const isExpanded = mobileAccordion === subItem.name;
+                              const hasSub = subItem.subItems && subItem.subItems.length > 0;
 
-                            {/* SUB-CATEGORIES ACCORDION CONTENT */}
-                            {hasSub && (
-                              <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                                <div className="overflow-hidden">
-                                  <div className="flex flex-col pl-[4.5rem] pr-4 pb-4 pt-1 gap-5">
-                                    {item.sub.map((subItem) => (
-                                      <Link
-                                        key={subItem}
-                                        to={`/products?category=${item.category}`}
-                                        onClick={() => setMobileOpen(false)}
-                                        className="flex items-center gap-4 text-[15px] font-normal text-black hover:text-red-600 transition-colors no-underline"
-                                      >
-                                        {/* Mimicking the generic outline icon from GM Modular */}
-                                        <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                                          <div className="w-3.5 h-3.5 border border-gray-400 rounded-sm" />
+                              return (
+                                <div key={subItem.name} className="flex flex-col border-b border-gray-300/50 last:border-none">
+                                  <button
+                                    onClick={() => {
+                                      if (hasSub) {
+                                        setMobileAccordion(isExpanded ? null : subItem.name);
+                                      } else {
+                                        navigate(subItem.url);
+                                        setMobileOpen(false);
+                                      }
+                                    }}
+                                    className="w-full flex items-center justify-between px-6 md:px-8 py-4 bg-transparent border-none cursor-pointer"
+                                  >
+                                    <div className="flex items-center gap-4">
+                                      <div className="w-6 flex justify-center">
+                                        <Icon size={22} strokeWidth={1.2} className="text-black" />
+                                      </div>
+                                      <div className="relative flex flex-col items-start">
+                                        <span className="text-[17px] font-normal text-black">
+                                          {subItem.name}
+                                        </span>
+                                        <div className={`h-[2px] bg-red-600 absolute -bottom-[17px] left-0 transition-all duration-300 ${isExpanded ? "w-full" : "w-0"}`} />
+                                      </div>
+                                    </div>
+                                    {hasSub && (
+                                      <ChevronDown size={20} strokeWidth={1.5} className={`transition-transform duration-300 text-black ${isExpanded ? "rotate-180" : ""}`} />
+                                    )}
+                                  </button>
+
+                                  {/* SUB-CATEGORIES ACCORDION CONTENT */}
+                                  {hasSub && (
+                                    <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                                      <div className="overflow-hidden">
+                                        <div className="flex flex-col pl-[4.5rem] pr-4 pb-4 pt-1 gap-5">
+                                          {subItem.subItems.map((nestedItem) => (
+                                            <Link
+                                              key={nestedItem.name}
+                                              to={nestedItem.url}
+                                              onClick={() => setMobileOpen(false)}
+                                              className="flex items-center gap-4 text-[15px] font-normal text-black hover:text-red-600 transition-colors no-underline"
+                                            >
+                                              <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                                                <div className="w-3.5 h-3.5 border border-gray-400 rounded-sm" />
+                                              </div>
+                                              {nestedItem.name}
+                                            </Link>
+                                          ))}
                                         </div>
-                                        {subItem}
-                                      </Link>
-                                    ))}
-                                  </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+                        </div>
+                      </div>
                     </div>
+                  );
+                }
+
+                return (
+                  <div key={item.name} className={`${index === 0 ? 'border-t ' : ''}border-b border-gray-300`}>
+                    <Link ref={index === 0 ? firstLinkRef : null} to={item.url} onClick={() => setMobileOpen(false)} className="flex items-center w-full px-6 md:px-8 py-4 text-[16px] font-normal text-black no-underline hover:text-red-600 transition-colors">
+                      {item.name}
+                    </Link>
                   </div>
-                </div>
-              </div>
-
-              {/* ABOUT US */}
-              <div className="border-b border-gray-300">
-                <Link to="/about" onClick={() => setMobileOpen(false)} className="flex items-center w-full px-6 md:px-8 py-4 text-[16px] font-normal text-black no-underline hover:text-red-600 transition-colors">
-                  About Us
-                </Link>
-              </div>
-
-              {/* NEW ARRIVALS */}
-              <div className="border-b border-gray-300">
-                <Link to="/new-arrivals" onClick={() => setMobileOpen(false)} className="flex items-center w-full px-6 md:px-8 py-4 text-[16px] font-normal text-black no-underline hover:text-red-600 transition-colors">
-                  New Arrivals
-                </Link>
-              </div>
-
-              {/* CONTACT US */}
-              <div className="border-b border-gray-300">
-                <Link to="/contact" onClick={() => setMobileOpen(false)} className="flex items-center w-full px-6 md:px-8 py-4 text-[16px] font-normal text-black no-underline hover:text-red-600 transition-colors">
-                  Contact Us
-                </Link>
-              </div>
+                );
+              })}
 
             </nav>
 

@@ -7,10 +7,12 @@ export const StoreProvider = ({ children }) => {
   const [banners, setBanners] = useState([]);
   const [categories, setCategories] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
+  const [offerProducts, setOfferProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [aboutUs, setAboutUs] = useState(null);
   const [footerData, setFooterData] = useState(null);
   const [socialLinks, setSocialLinks] = useState([]);
+  const [navItems, setNavItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [storeLoaded, setStoreLoaded] = useState(false);
   const [error, setError] = useState(null);
@@ -22,6 +24,10 @@ export const StoreProvider = ({ children }) => {
       const res = await getStorefrontInit();
       const raw = res.data || res;
       
+      if (raw.navItems) {
+        // Sort nav items by order
+        setNavItems([...raw.navItems].sort((a, b) => a.order - b.order));
+      }
       if (raw.hero?.banners) {
         setBanners(raw.hero.banners);
       }
@@ -33,6 +39,9 @@ export const StoreProvider = ({ children }) => {
       }
       if (raw.newArrivals) {
         setNewArrivals(raw.newArrivals);
+      }
+      if (raw.offerProducts) {
+        setOfferProducts(raw.offerProducts);
       }
       if (raw.aboutUs) {
         setAboutUs(raw.aboutUs);
@@ -59,9 +68,11 @@ export const StoreProvider = ({ children }) => {
 
   return (
     <StoreContext.Provider value={{
+      navItems,
       banners,
       categories,
       newArrivals,
+      offerProducts,
       featuredProducts,
       aboutUs,
       footerData,

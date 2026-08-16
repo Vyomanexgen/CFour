@@ -12,13 +12,9 @@ export const ToastProvider = ({ children }) => {
 
   const addToast = useCallback((message, type = "info") => {
     const id = Date.now() + Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    
-    // Auto-dismiss after 4 seconds
-    setTimeout(() => {
-      removeToast(id);
-    }, 4000);
-  }, [removeToast]);
+    // Limit max simultaneous visible toasts to 3
+    setToasts((prev) => [...prev.slice(-2), { id, message, type }]);
+  }, []);
 
   const toast = {
     success: useCallback((msg) => addToast(msg, "success"), [addToast]),

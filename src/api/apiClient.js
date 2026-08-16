@@ -60,17 +60,18 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (import.meta.env.DEV) {
-      console.error(`[API Error] ${error.response?.status || "Network"} ${originalRequest?.url}`, error.response?.data || error.message);
-    }
-
     // Global API Error Event Dispatch (except for initial retryable 401s and expected 404s)
     const isRetryable401 = error.response?.status === 401 && !originalRequest?._retry;
     const isExpected404 = error.response?.status === 404 && (
       originalRequest?.url?.includes("/api/v1/users/me") ||
       originalRequest?.url?.includes("/api/v1/config") ||
+      originalRequest?.url?.includes("/api/v1/payments/gateways") ||
       originalRequest?.url?.includes("/api/v1/content/public/pages")
     );
+
+    if (import.meta.env.DEV && !isExpected404) {
+      console.error(`[API Error] ${error.response?.status || "Network"} ${originalRequest?.url}`, error.response?.data || error.message);
+    }
 
     if (!isRetryable401 && !isExpected404) {
       const errMsg = error.response?.data?.error || error.response?.data?.message || error.message;

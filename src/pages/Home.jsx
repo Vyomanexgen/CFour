@@ -16,21 +16,90 @@ import offer1 from "../assets/Offer Product/image1.webp";
 import offer2 from "../assets/Offer Product/image2.webp";
 import offer3 from "../assets/Offer Product/image3.webp";
 
+function MarqueeProductCard({ product, onClick }) {
+  const image = product.images?.[0]?.url || product.images?.[0] || product.image || "https://placehold.co/300x200?text=No+Image";
+  const name = product.name || product.title || "Product";
+  
+  // Robust price calculation across variants / defaultVariant / direct properties
+  const variant = product.variants?.[0] || product.defaultVariant || {};
+  const originalPrice = Number(variant.originalPrice ?? product.originalPrice ?? product.price ?? 0);
+  const offerPrice = Number(variant.offerPrice ?? product.offerPrice ?? 0);
+  
+  const price = (offerPrice > 0 && (originalPrice === 0 || offerPrice < originalPrice))
+    ? offerPrice
+    : (originalPrice > 0 ? originalPrice : (offerPrice > 0 ? offerPrice : Number(product.price || 0)));
+    
+  const discount = (originalPrice > price && price > 0)
+    ? Math.round(((originalPrice - price) / originalPrice) * 100)
+    : 0;
+  
+  return (
+    <div 
+      onClick={() => onClick(product._id || product.id)}
+      className="bg-white rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:shadow-2xl hover:border-red-100 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col h-full group relative cursor-pointer mx-3 sm:mx-4 shrink-0 w-[240px] sm:w-[270px] md:w-[300px] border border-neutral-100/90 select-none"
+    >
+      {/* Discount Badge */}
+      {discount > 0 && (
+        <div className="absolute top-3 left-3 z-10 bg-[#e31e24] text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+          {discount}% OFF
+        </div>
+      )}
+
+      {/* Quick View Button (overlay) */}
+      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200">
+        <div className="bg-white/95 backdrop-blur-sm p-2 rounded-full shadow-md text-neutral-600 hover:text-[#e31e24] hover:scale-110 transition-transform">
+           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+      </div>
+
+      {/* Unified Aspect Ratio Image Container */}
+      <div className="w-full aspect-[4/3] bg-neutral-50/70 relative overflow-hidden flex items-center justify-center p-4 sm:p-5 rounded-t-2xl border-b border-neutral-100/60">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/[0.02] to-transparent pointer-events-none" />
+        <img 
+          src={image} 
+          alt={name} 
+          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-sm" 
+          onError={(e) => {
+            e.target.src = "https://placehold.co/300x200?text=No+Image";
+          }}
+        />
+      </div>
+
+      {/* Typography & Pricing */}
+      <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between bg-white text-left relative z-20">
+        <h3 className="text-sm sm:text-[15px] font-semibold text-neutral-800 leading-snug line-clamp-2 group-hover:text-[#e31e24] transition-colors duration-200">
+          {name}
+        </h3>
+        
+        <div className="mt-3 flex items-center justify-between">
+           <div className="flex flex-col">
+             {price < originalPrice && originalPrice > 0 && (
+               <span className="text-[11px] text-neutral-400 line-through mb-0.5">₹{originalPrice.toLocaleString('en-IN')}</span>
+             )}
+             <span className="text-base sm:text-lg font-bold text-[#e31e24] leading-none">
+               {price > 0 ? `₹${price.toLocaleString('en-IN')}` : "Request Quote"}
+             </span>
+           </div>
+           
+           <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center group-hover:bg-[#e31e24] transition-colors duration-300 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#e31e24] group-hover:text-white transition-colors"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MarqueeSlider({
   items,
   speed = 18,
   dark = false,
-  cardSize = "square",
+  onItemClick
 }) {
   const track = [...items, ...items, ...items];
 
-  const sizeClass =
-    cardSize === "card"
-      ? "h-[280px] w-[220px] sm:h-[320px] sm:w-[260px] md:h-[380px] md:w-[300px] lg:h-[420px] lg:w-[340px]"
-      : "h-[200px] w-[200px] sm:h-[260px] sm:w-[260px] md:h-[320px] md:w-[320px] lg:h-[380px] lg:w-[380px]";
-
   return (
-    <div className="relative w-full overflow-hidden">
+    <div className="relative w-full overflow-hidden py-4">
       {/* FADE LEFT */}
       <div
         className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 sm:w-24"
@@ -56,21 +125,8 @@ function MarqueeSlider({
         className="flex w-max items-center"
         style={{ animation: `marqueeScroll ${speed}s linear infinite` }}
       >
-        {track.map((src, i) => (
-          <div key={i} className={`mx-4 shrink-0 ${sizeClass}`}>
-            <img
-              src={src}
-              alt={`product-${i}`}
-              className="
-                h-full
-                w-full
-                object-cover
-                transition-transform
-                duration-300
-                hover:scale-105
-              "
-            />
-          </div>
+        {track.map((item, i) => (
+          <MarqueeProductCard key={i} product={item} onClick={onItemClick} />
         ))}
       </div>
 
@@ -339,19 +395,13 @@ function PremiumSection({
 }
 
 import { useStore } from "../context/StoreContext";
-import { useQuery } from "@tanstack/react-query";
-import { getPublicCampaigns } from "../api/marketingApi";
 import { Link } from "react-router-dom";
 
 export default function Home() {
-  const { banners, newArrivals, loading, error } = useStore();
+  const { banners, newArrivals, offerProducts, loading, error } = useStore();
+  const navigate = useNavigate();
 
-  const { data: campaigns, isLoading: campaignsLoading, isError: campaignsError } = useQuery({
-    queryKey: ["marketing", "campaigns"],
-    queryFn: getPublicCampaigns,
-  });
-
-  if (loading || campaignsLoading) {
+  if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-black">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
@@ -361,7 +411,6 @@ export default function Home() {
 
   const activeBanners = banners && banners.length > 0 ? banners.filter(b => b.status === "active" || b.isActive !== false) : [];
   const featuredBanner = activeBanners[0];
-  const activeCampaigns = campaigns && campaigns.length > 0 ? campaigns.filter(c => c.status === "active") : [];
 
   return (
     <>
@@ -590,10 +639,10 @@ export default function Home() {
 
         {newArrivals && newArrivals.length > 0 ? (
           <MarqueeSlider
-            items={newArrivals.map(item => item.images?.[0] || image1)}
+            items={newArrivals}
             speed={18}
             dark={false}
-            cardSize="square"
+            onItemClick={(id) => navigate(`/products?productId=${id}`)}
           />
         ) : (
           <p className="text-gray-500 text-lg">No New Arrivals available at the moment.</p>
@@ -644,77 +693,16 @@ export default function Home() {
           Offer Product
         </h2>
 
-        {activeCampaigns.length > 0 ? (
+        {offerProducts && offerProducts.length > 0 ? (
           <MarqueeSlider
-            items={activeCampaigns[0]?.products?.map(p => p.image || offer1) || [offer1, offer2, offer3]}
+            items={offerProducts.filter(p => p !== null && p !== undefined)}
             speed={20}
             dark={true}
-            cardSize="card"
+            onItemClick={(id) => navigate(`/products?productId=${id}`)}
           />
-        ) : campaignsError ? (
-           <div className="text-center text-red-400 mt-4">Unable to load campaigns. Please try again later.</div>
         ) : (
            <div className="text-center text-gray-400 mt-4">
-             <p className="text-xl mb-4">No active promotional campaigns right now.</p>
-             <MarqueeSlider items={[offer1, offer2, offer3]} speed={20} dark={true} cardSize="card" />
-           </div>
-        )}
-      </section>
-
-      {/* RECOMMENDATIONS */}
-
-      <section
-        className="
-          sticky
-          top-0
-          z-[9]
-
-          flex
-          h-screen
-          w-full
-          flex-col
-          items-center
-          justify-center
-
-          overflow-hidden
-
-          bg-[#f7f7f7]
-
-          px-6
-          py-24
-        "
-      >
-        <h2
-          className="
-            mb-20
-
-            text-center
-
-            font-['Oswald']
-            text-[34px]
-            font-semibold
-            uppercase
-
-            text-black
-
-            md:text-[44px]
-
-            lg:text-[52px]
-          "
-        >
-          Recommendations
-        </h2>
-
-        {activeCampaigns.length > 1 ? (
-          <MarqueeSlider
-            items={activeCampaigns[1]?.products?.map(p => p.image || image1) || [image1, image2, image3]}
-            speed={16}
-            dark={false}
-            cardSize="square"
-          />
-        ) : (
-           <div className="text-center text-gray-500 mt-4">
-             <MarqueeSlider items={[image1, image2, image3]} speed={16} dark={false} cardSize="square" />
+             <p className="text-xl mb-4">No active promotional offers right now.</p>
            </div>
         )}
       </section>

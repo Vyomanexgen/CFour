@@ -90,7 +90,9 @@ export default function Cart() {
           const res = await getPaymentGateways();
           setGateways(res.data || res || []);
         } catch (err) {
-          console.error("Failed to load payment gateways:", err);
+          if (err.response?.status !== 404) {
+            console.error("Failed to load payment gateways:", err);
+          }
           setGateways([]);
         } finally {
           setLoadingGateways(false);
@@ -182,7 +184,7 @@ export default function Cart() {
   };
 
   const activeProviders = getActiveGateways();
-  const isRazorpayActive = activeProviders.includes("razorpay");
+  const isRazorpayActive = activeProviders.includes("razorpay") || activeProviders.length === 0;
   const isCashfreeActive = activeProviders.includes("cashfree");
   const isStripeActive = activeProviders.includes("stripe");
 
@@ -1968,7 +1970,7 @@ export default function Cart() {
                   setConfirmDeleteId(null);
                   await removeCartItem(id);
                 }}
-                className="flex-1 bg-red-650 hover:bg-red-750 text-white py-2.5 rounded-full text-sm font-bold transition cursor-pointer border-none"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-full text-sm font-bold transition cursor-pointer border-none"
               >
                 Remove
               </button>
@@ -1995,7 +1997,7 @@ export default function Cart() {
                   setShowConfirmClear(false);
                   await clearCart();
                 }}
-                className="flex-1 bg-red-655 hover:bg-red-750 text-white py-2.5 rounded-full text-sm font-bold transition cursor-pointer border-none"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-full text-sm font-bold transition cursor-pointer border-none"
               >
                 Clear Cart
               </button>

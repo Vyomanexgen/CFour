@@ -84,52 +84,70 @@ export default function NewArrivals() {
         {isLoading ? (
           <div className="flex justify-center mt-10">
             <div className="animate-pulse flex space-x-4">
-              <div className="h-64 w-64 bg-gray-700 rounded-lg"></div>
-              <div className="h-64 w-64 bg-gray-700 rounded-lg"></div>
-              <div className="h-64 w-64 bg-gray-700 rounded-lg"></div>
+              <div className="h-64 w-64 bg-gray-800 rounded-2xl"></div>
+              <div className="h-64 w-64 bg-gray-800 rounded-2xl"></div>
+              <div className="h-64 w-64 bg-gray-800 rounded-2xl"></div>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10 max-w-[1200px] mx-auto">
-            {productsList.length > 0 ? productsList.map((item) => (
-              <div
-                key={item._id || item.id}
-                className="bg-white rounded-lg overflow-hidden shadow-lg flex flex-col"
-              >
-                {/* IMAGE */}
-                <div className="relative">
-                  <img
-                    src={item.images?.[0]?.url || item.images?.[0] || item.image || "https://placehold.co/300x280?text=No+Image"}
-                    alt={item.name || item.title}
-                    className="w-full h-[280px] object-cover"
-                    onError={(e) => {
-                      e.target.src = "https://placehold.co/300x280?text=No+Image";
-                    }}
-                  />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10 max-w-[1200px] mx-auto">
+            {productsList.length > 0 ? productsList.map((item) => {
+              const variant = item.variants?.[0] || item.defaultVariant || {};
+              const originalPrice = Number(variant.originalPrice ?? item.originalPrice ?? item.price ?? 0);
+              const offerPrice = Number(variant.offerPrice ?? item.offerPrice ?? 0);
+              const price = (offerPrice > 0 && (originalPrice === 0 || offerPrice < originalPrice))
+                ? offerPrice
+                : (originalPrice > 0 ? originalPrice : (offerPrice > 0 ? offerPrice : Number(item.price || 0)));
 
-                  {/* TAG */}
-                  <span className="absolute top-3 left-3 bg-[#f5eaea] text-[#d01a00] text-xs px-3 py-1 rounded-md font-medium">
-                    New Arrival
-                  </span>
-                </div>
-
-                {/* CONTENT */}
-                <div className="px-4 py-5 text-center flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-3xl font-bold text-black">{item.name || item.title}</h3>
-                    <p className="text-sm text-[#333] leading-[20px] mt-2 line-clamp-2">
-                      {item.description || "Elegant design with long-lasting performance."}
-                    </p>
+              return (
+                <div
+                  key={item._id || item.id}
+                  onClick={() => navigate(`/products?productId=${item._id || item.id}`)}
+                  className="bg-white rounded-2xl overflow-hidden border border-neutral-100/90 shadow-md hover:shadow-2xl hover:border-red-100 hover:-translate-y-1.5 transition-all duration-300 flex flex-col group cursor-pointer text-left"
+                >
+                  {/* IMAGE CONTAINER WITH UNIFIED ASPECT RATIO */}
+                  <div className="w-full aspect-[4/3] bg-neutral-50/70 p-5 relative overflow-hidden flex items-center justify-center border-b border-neutral-100/60">
+                    <span className="absolute top-3 left-3 bg-[#e31e24] text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm z-10">
+                      New Arrival
+                    </span>
+                    <img
+                      src={item.images?.[0]?.url || item.images?.[0] || item.image || "https://placehold.co/300x280?text=No+Image"}
+                      alt={item.name || item.title}
+                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-sm"
+                      onError={(e) => {
+                        e.target.src = "https://placehold.co/300x280?text=No+Image";
+                      }}
+                    />
                   </div>
-                  <button 
-                    onClick={() => navigate(`/products?id=${item._id || item.id}`)}
-                    className="mt-4 bg-[#d01a00] hover:bg-[#b81600] text-white text-xl font-semibold px-5 py-1 rounded-full transition-all duration-300 w-fit mx-auto cursor-pointer"
-                  >
-                    View Details
-                  </button>
+
+                  {/* CONTENT */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-neutral-800 group-hover:text-[#e31e24] transition-colors leading-snug line-clamp-1">
+                        {item.name || item.title}
+                      </h3>
+                      <p className="text-xs text-neutral-500 mt-1.5 line-clamp-2 leading-relaxed">
+                        {item.description || "Premium quality smart electrical solutions engineered for modern homes and commercial projects."}
+                      </p>
+                    </div>
+                    
+                    <div className="mt-4 pt-3.5 border-t border-neutral-100 flex items-center justify-between">
+                      <div className="flex flex-col">
+                        {price < originalPrice && originalPrice > 0 && (
+                          <span className="text-[11px] text-neutral-400 line-through mb-0.5">₹{originalPrice.toLocaleString('en-IN')}</span>
+                        )}
+                        <span className="text-lg font-bold text-[#e31e24]">
+                          {price > 0 ? `₹${price.toLocaleString('en-IN')}` : "Request Quote"}
+                        </span>
+                      </div>
+                      <span className="text-xs font-semibold text-neutral-700 group-hover:text-[#e31e24] flex items-center gap-1">
+                        View Details →
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )) : (
+              );
+            }) : (
               <p className="text-white text-center col-span-full">No new arrivals found.</p>
             )}
           </div>
