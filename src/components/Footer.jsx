@@ -380,18 +380,16 @@ export default function Footer() {
 
           text-center
 
-          text-[16px]
+          text-[14px]
           font-medium
           leading-[1.6]
 
           text-black
 
-          lg:text-[20px]
+          lg:text-[16px]
         "
       >
-        <p>{footerData?.copyrightText || "© 2026 C⚡FOUR. All Rights Reserved."}</p>
-
-        <p>Designed for smarter living.</p>
+        <p>{footerData?.copyrightText || `© ${new Date().getFullYear()} C⚡FOUR. All Rights Reserved.`}</p>
       </div>
     </footer>
   );

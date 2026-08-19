@@ -4,11 +4,19 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { getPublicPage } from "../api/contentApi";
 import { submitContactUsForm } from "../api/storefrontApi";
 import { useToast } from "../context/ToastContext";
+import { useStore } from "../context/StoreContext";
 
 import topImg from "../assets/contactUs/top.webp";
 
 export default function Contact() {
   const toast = useToast();
+  const { footerData } = useStore();
+  const contactInfo = footerData?.contactUs || {
+    address: "Gachibowli, Hyderabad, India",
+    phone: "+91 7867789876",
+    email: "contact@cfour.com"
+  };
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -164,7 +172,7 @@ export default function Contact() {
           {/* ADDRESS */}
 
           <a
-            href="https://maps.google.com/?q=Gachibowli,Hyderabad,India"
+            href={`https://maps.google.com/?q=${contactInfo.address}`}
             target="_blank"
             rel="noopener noreferrer"
             className="
@@ -203,22 +211,21 @@ export default function Contact() {
                 text-[20px]
                 font-semibold
                 leading-[1.4]
+                whitespace-pre-wrap
 
                 text-white
 
                 lg:text-[24px]
               "
             >
-              Gachibowli, Hyderabad,
-              <br />
-              India
+              {contactInfo.address}
             </p>
           </a>
 
           {/* PHONE */}
 
           <a
-            href="tel:+917867789876"
+            href={`tel:${contactInfo.phone.replace(/[^0-9+]/g, '')}`}
             className="
               rounded-2xl
               border
@@ -260,14 +267,14 @@ export default function Contact() {
                 lg:text-[24px]
               "
             >
-              +91 7867789876
+              {contactInfo.phone}
             </p>
           </a>
 
           {/* EMAIL */}
 
           <a
-            href="mailto:contact@cfour.com"
+            href={`mailto:${contactInfo.email}`}
             className="
               rounded-2xl
               border
@@ -309,7 +316,7 @@ export default function Contact() {
                 lg:text-[24px]
               "
             >
-              contact@cfour.com
+              {contactInfo.email}
             </p>
           </a>
         </div>
@@ -687,58 +694,6 @@ export default function Contact() {
           </form>
         </div>
 
-        {/* DESCRIPTION */}
-
-        <div
-          className="
-            mx-auto
-
-            mt-20
-
-            max-w-[1300px]
-
-            text-center
-          "
-        >
-          {isLoading ? (
-            <div className="animate-pulse space-y-3 max-w-[800px] mx-auto">
-              <div className="h-4 bg-gray-600 rounded w-full"></div>
-              <div className="h-4 bg-gray-600 rounded w-full"></div>
-              <div className="h-4 bg-gray-600 rounded w-5/6"></div>
-            </div>
-          ) : (
-            <div 
-              className="text-[18px] font-semibold leading-[1.8] text-white lg:text-[28px] prose prose-invert mx-auto"
-              dangerouslySetInnerHTML={{ __html: pageData?.body || `
-                <p>Content coming soon. The store administrator is currently updating this page.</p>
-              `}}
-            />
-          )}
-        </div>
-
-        {/* MAP */}
-
-        <div
-          className="
-            mt-14
-
-            w-full
-
-            overflow-hidden
-            rounded-2xl
-          "
-        >
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.2963603480784!2d78.32860497516473!3d17.440089583436!2m3!1f0!2f0!3f0!2m3!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93dc8c5d69df%3A0x19688beb557fa0ee!2sGachibowli%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
-            width="100%"
-            height="450"
-            style={{ border: 0 }}
-            allowFullScreen={true}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            className="w-full"
-          />
-        </div>
       </section>
     </div>
   );

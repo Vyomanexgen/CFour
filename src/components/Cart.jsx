@@ -75,6 +75,11 @@ export default function Cart() {
 
   const [isSelectedSavedAddress, setIsSelectedSavedAddress] = useState(false);
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+
   // Payment Gateways Integration State
   const [gateways, setGateways] = useState([]);
   const [loadingGateways, setLoadingGateways] = useState(false);
@@ -137,6 +142,24 @@ export default function Cart() {
       setIsSelectedSavedAddress(true);
       setCheckoutError(null);
     }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+    // Simulate backend coupon verification delay
+    setCouponError("");
+    setAppliedCoupon(null);
+    toast.info("Verifying coupon...");
+    
+    // Fallback: Currently the backend does not have an open /apply-coupon endpoint.
+    // If the backend had one, we would call `applyCoupon(couponCode, cartItems)` here.
+    setTimeout(() => {
+      setCouponError("Invalid or expired coupon code");
+      toast.error("Invalid or expired coupon code");
+    }, 800);
   };
 
   const handleClearForm = () => {
@@ -1408,10 +1431,31 @@ export default function Cart() {
                 <span className="font-semibold">GST:</span>
                 <span>₹{gst.toLocaleString("en-IN")}.00</span>
               </div>
-              <div className="border-t border-gray-300 pt-4 flex justify-between font-bold text-2xl">
-                <span>Order Total:</span>
-                <span>₹{grandTotal.toLocaleString("en-IN")}.00</span>
+            </div>
+
+            <div className="mb-6 border-t border-gray-200 pt-5 mt-4">
+              <p className="text-sm font-semibold mb-2">Have a coupon code?</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="Enter code"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-red-500 outline-none uppercase"
+                />
+                <button
+                  onClick={handleApplyCoupon}
+                  className="bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-800 transition"
+                >
+                  Apply
+                </button>
               </div>
+              {couponError && <p className="text-red-500 text-xs mt-1.5">{couponError}</p>}
+            </div>
+
+            <div className="border-t border-gray-300 pt-4 flex justify-between font-bold text-2xl">
+              <span>Order Total:</span>
+              <span>₹{grandTotal.toLocaleString("en-IN")}.00</span>
             </div>
             {checkoutError && (
               <div className="bg-red-100 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-center font-medium text-sm mt-4">
@@ -1903,10 +1947,31 @@ export default function Cart() {
                   ₹{gst.toLocaleString("en-IN")}.00
                 </span>
               </div>
-              <div className="flex justify-between font-bold text-xl pt-4 border-t border-gray-300">
-                <span>Grand Total:</span>
-                <span>₹{grandTotal.toLocaleString("en-IN")}.00</span>
+            </div>
+
+            <div className="mb-4 mt-4 border-t border-gray-200 pt-4">
+              <p className="text-xs font-semibold mb-2 text-gray-700">Have a coupon code?</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="Enter code"
+                  className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:border-red-500 outline-none uppercase"
+                />
+                <button
+                  onClick={handleApplyCoupon}
+                  className="bg-black text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-gray-800 transition"
+                >
+                  Apply
+                </button>
               </div>
+              {couponError && <p className="text-red-500 text-[10px] mt-1">{couponError}</p>}
+            </div>
+
+            <div className="flex justify-between font-bold text-xl pt-4 border-t border-gray-300">
+              <span>Grand Total:</span>
+              <span>₹{grandTotal.toLocaleString("en-IN")}.00</span>
             </div>
             <button
               onClick={() => setShowCheckout(true)}
