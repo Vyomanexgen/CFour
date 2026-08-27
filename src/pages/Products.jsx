@@ -1991,9 +1991,9 @@ export default function Products() {
       list = list.filter((p) => selectedColors.includes(p.color));
     
     if (availabilityFilter === "instock") {
-      list = list.filter((p) => (p.variants?.[0]?.stockQuantity || 0) > 0);
+      list = list.filter((p) => (p.variants?.[0]?.stockQuantity || p.stockQuantity || 0) > 0);
     } else if (availabilityFilter === "outofstock") {
-      list = list.filter((p) => (p.variants?.[0]?.stockQuantity || 0) <= 0);
+      list = list.filter((p) => (p.variants?.[0]?.stockQuantity || p.stockQuantity || 0) <= 0);
     }
 
     list = list.filter((p) => {
@@ -3112,7 +3112,7 @@ export default function Products() {
                       {filteredAndSortedProducts.map((item, index) => {
                         const defaultVariant = item.variants?.[0];
                         const priceVal = defaultVariant?.offerPrice || defaultVariant?.originalPrice || item.price || 0;
-                        const inStockVal = (defaultVariant?.stockQuantity || 0) > 0;
+                        const inStockVal = (defaultVariant?.stockQuantity || item.stockQuantity || 0) > 0;
                         const itemImage = item.images?.[0] || "https://placehold.co/400x300?text=No+Image";
 
                         return (
@@ -3236,7 +3236,7 @@ export default function Products() {
                                 </p>
                                 <p>
                                   <span className="font-semibold">Stock:</span>{" "}
-                                  {defaultVariant?.stockQuantity || 0} left
+                                  {defaultVariant?.stockQuantity || item.stockQuantity || 0} left
                                 </p>
                               </div>
 

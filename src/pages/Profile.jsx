@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { updateCurrentUserProfile } from "../api/authApi";
 import { User, Phone, CheckCircle, Save, Camera, AlertTriangle, ArrowLeft } from "lucide-react";
 import { useToast } from "../context/ToastContext";
+import TwoFactorSettings from "../components/TwoFactorSettings";
 
 export default function Profile() {
   const { user, setUser, loading: authLoading } = useAuth();
@@ -349,6 +350,8 @@ export default function Profile() {
             </div>
           </div>
         </form>
+
+        <TwoFactorSettings />
       </div>
     </div>
   );

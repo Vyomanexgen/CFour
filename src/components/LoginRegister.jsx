@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.webp";
 import {
@@ -20,7 +21,7 @@ import {
 
 export default function LoginRegister() {
   const navigate = useNavigate();
-  const { login, register, user } = useAuth();
+  const { login, loginWith2FA, loginWithGoogle, register, user } = useAuth();
 
   const [isRegister, setIsRegister] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -37,6 +38,11 @@ export default function LoginRegister() {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // 2FA states
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [twoFATempToken, setTwoFATempToken] = useState("");
+  const [twoFACode, setTwoFACode] = useState("");
 
   const firstInputRef = useRef(null);
 
@@ -69,6 +75,32 @@ export default function LoginRegister() {
         firstInputRef.current.focus();
       }
     }, 120);
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setSubmitting(true);
+      setErrorMsg("");
+      const payload = await loginWithGoogle(credentialResponse.credential);
+      if (payload?.requires2FA) {
+        setRequires2FA(true);
+        setTwoFATempToken(payload.tempToken);
+        setSuccessMsg("Please enter the 6-digit code from your Authenticator app.");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(
+        err.response?.data?.error || err.response?.data?.message || "Google authentication failed."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setErrorMsg("Google Sign-In was cancelled or failed.");
   };
 
   const handleSubmit = async (e) => {
@@ -112,9 +144,15 @@ export default function LoginRegister() {
     setSubmitting(true);
     try {
       if (isForgotPassword) {
-        setSuccessMsg(
-          "If an account with that email exists, password reset instructions have been sent."
-        );
+        setSuccessMsg("If an account with that email exists, password reset instructions have been sent.");
+      } else if (requires2FA) {
+        if (!twoFACode || twoFACode.length < 6) {
+          setErrorMsg("Please enter the 6-digit Authenticator code.");
+          setSubmitting(false);
+          return;
+        }
+        await loginWith2FA(twoFATempToken, twoFACode);
+        navigate("/");
       } else if (isRegister) {
         await register(trimmedEmail, password, name.trim());
         setIsRegister(false);
@@ -127,15 +165,21 @@ export default function LoginRegister() {
           }
         }, 120);
       } else {
-        await login(trimmedEmail, password);
-        navigate("/");
+        const payload = await login(trimmedEmail, password);
+        if (payload?.requires2FA) {
+          setRequires2FA(true);
+          setTwoFATempToken(payload.tempToken);
+          setSuccessMsg("Please enter the 6-digit code from your Authenticator app.");
+        } else {
+          navigate("/");
+        }
       }
     } catch (err) {
       console.error(err);
       setErrorMsg(
         err.response?.data?.error ||
-          err.response?.data?.message ||
-          "Authentication failed. Please check your credentials and try again."
+        err.response?.data?.message ||
+        "Authentication failed. Please check your credentials and try again."
       );
     } finally {
       setSubmitting(false);
@@ -469,6 +513,29 @@ export default function LoginRegister() {
               </button>
             </div>
 
+            {/* Divider */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-neutral-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-3 text-neutral-400 font-semibold tracking-wider">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            {/* Google OAuth Button */}
+            <div className="flex justify-center mt-4">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                text="signup_with"
+                size="large"
+                width="100%"
+              />
+            </div>
+
             {/* Mobile-only toggle footer */}
             <div className="md:hidden pt-4 text-center">
               <p className="text-sm text-neutral-600">
@@ -558,27 +625,49 @@ export default function LoginRegister() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4 text-left">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
-                Email Address
-              </label>
-              <div className="relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
-                  <Mail className="h-5 w-5" />
+            {!requires2FA && (
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative rounded-xl shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <input
+                    ref={firstInputRef}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    autoComplete="email"
+                    className="block w-full pl-11 pr-4 py-3 text-sm rounded-xl border border-neutral-300 bg-neutral-50/60 text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#e31e24] focus:ring-2 focus:ring-[#e31e24]/15 transition-all"
+                  />
                 </div>
-                <input
-                  ref={firstInputRef}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  autoComplete="email"
-                  className="block w-full pl-11 pr-4 py-3 text-sm rounded-xl border border-neutral-300 bg-neutral-50/60 text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#e31e24] focus:ring-2 focus:ring-[#e31e24]/15 transition-all"
-                />
               </div>
-            </div>
+            )}
 
-            {!isForgotPassword && (
+            {requires2FA && (
+              <div className="animate-fadeIn">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
+                  Authenticator Code (6 digits)
+                </label>
+                <div className="relative rounded-xl shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <input
+                    type="text"
+                    value={twoFACode}
+                    onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="123456"
+                    className="block w-full pl-11 pr-4 py-3 text-sm rounded-xl border border-neutral-300 bg-neutral-50/60 text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#e31e24] focus:ring-2 focus:ring-[#e31e24]/15 transition-all text-center tracking-widest text-lg font-mono"
+                  />
+                </div>
+              </div>
+            )}
+
+            {!isForgotPassword && !requires2FA && (
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
                   Password
@@ -647,15 +736,44 @@ export default function LoginRegister() {
                 {submitting ? (
                   <>
                     <span className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                    <span>{isForgotPassword ? "Sending Link..." : "Signing In..."}</span>
+                    <span>{isForgotPassword ? "Sending..." : "Authenticating..."}</span>
                   </>
                 ) : isForgotPassword ? (
-                  "Send Recovery Link"
+                  "Send Reset Link"
+                ) : requires2FA ? (
+                  "Verify & Login"
                 ) : (
-                  "Login"
+                  "Sign In"
                 )}
               </button>
             </div>
+
+            {!isForgotPassword && (
+              <>
+                {/* Divider */}
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-neutral-200" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-3 text-neutral-400 font-semibold tracking-wider">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                {/* Google OAuth Button */}
+                <div className="flex justify-center mt-4">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    text="signin_with"
+                    size="large"
+                    width="100%"
+                  />
+                </div>
+              </>
+            )}
 
             {/* Mobile-only toggle footer */}
             <div className="md:hidden pt-4 text-center">

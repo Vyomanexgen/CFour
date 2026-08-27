@@ -289,7 +289,6 @@ export default function Navbar({ cartCount = 0 }) {
                         {/* Grid layout: 4 cols on tablet (lg), 11 cols on desktop (xl) to make a single row */}
                         <div className="grid grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-x-2 gap-y-10" role="menu">
                           {item.subItems.map((subItem) => {
-                            const Icon = LayoutGrid; // Generic fallback for dynamic items
                             const isFlyoutOpen = activeFlyout === subItem.name;
 
                             return (
@@ -319,7 +318,11 @@ export default function Navbar({ cartCount = 0 }) {
                                     transition-transform duration-300 group-hover/item:scale-[1.1] 
                                     group-focus/item:scale-[1.1]
                                   ">
-                                    <Icon size={32} strokeWidth={1.5} className="text-gray-700 group-hover/item:text-red-600 group-focus/item:text-red-600 transition-colors" />
+                                    {subItem.icon && (subItem.icon.startsWith("http") || subItem.icon.startsWith("data:")) ? (
+                                      <img src={subItem.icon} alt={subItem.name} className="w-8 h-8 object-contain" />
+                                    ) : (
+                                      <LayoutGrid size={32} strokeWidth={1.5} className="text-gray-700 group-hover/item:text-red-600 group-focus/item:text-red-600 transition-colors" />
+                                    )}
                                   </div>
                                   <div className="relative">
                                     <span className="text-[12px] xl:text-[13px] font-semibold text-center text-gray-800 group-hover/item:text-red-700 group-focus/item:text-red-700 transition-colors whitespace-nowrap">
@@ -533,7 +536,6 @@ export default function Navbar({ cartCount = 0 }) {
                             </Link>
                             
                             {item.subItems.map((subItem) => {
-                              const Icon = LayoutGrid; // Generic fallback icon
                               const isExpanded = mobileAccordion === subItem.name;
                               const hasSub = subItem.subItems && subItem.subItems.length > 0;
 
@@ -552,7 +554,11 @@ export default function Navbar({ cartCount = 0 }) {
                                   >
                                     <div className="flex items-center gap-4">
                                       <div className="w-6 flex justify-center">
-                                        <Icon size={22} strokeWidth={1.2} className="text-black" />
+                                        {subItem.icon && (subItem.icon.startsWith("http") || subItem.icon.startsWith("data:")) ? (
+                                          <img src={subItem.icon} alt={subItem.name} className="w-5 h-5 object-contain" />
+                                        ) : (
+                                          <LayoutGrid size={22} strokeWidth={1.2} className="text-black" />
+                                        )}
                                       </div>
                                       <div className="relative flex flex-col items-start">
                                         <span className="text-[17px] font-normal text-black">

@@ -30,3 +30,13 @@ export const clearCart = async () => {
   const response = await apiClient.delete("/api/v1/cart");
   return response.data;
 };
+
+export const applyCoupon = async (code) => {
+  const response = await apiClient.post('/api/v1/cart/apply-coupon', { code });
+  return response.data;
+};
+
+export const removeCoupon = async () => {
+  const response = await apiClient.delete('/api/v1/cart/remove-coupon');
+  return response.data;
+};

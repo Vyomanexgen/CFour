@@ -43,3 +43,29 @@ export const updateCurrentUserProfile = async (profileData) => {
   return response.data;
 };
 
+// --- New Auth & 2FA Endpoints ---
+
+export const googleAuth = async (idToken) => {
+  const response = await apiClient.post("/api/v1/auth/google", { idToken, organizationId: ORG_ID });
+  return response.data;
+};
+
+export const verify2FALogin = async (tempToken, token) => {
+  const response = await apiClient.post("/api/v1/auth/2fa/login-verify", { tempToken, token });
+  return response.data;
+};
+
+export const generate2FA = async () => {
+  const response = await apiClient.post("/api/v1/auth/2fa/generate");
+  return response.data;
+};
+
+export const verifyAndEnable2FA = async (token) => {
+  const response = await apiClient.post("/api/v1/auth/2fa/verify-and-enable", { token });
+  return response.data;
+};
+
+export const disable2FA = async () => {
+  const response = await apiClient.post("/api/v1/auth/2fa/disable");
+  return response.data;
+};

@@ -12,6 +12,7 @@ import {
   getPaymentGateways,
   verifyRazorpayPayment,
 } from "../api/orderApi";
+import { applyCoupon, removeCoupon } from "../api/cartApi";
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -149,17 +150,32 @@ export default function Cart() {
       setCouponError("Please enter a coupon code");
       return;
     }
-    // Simulate backend coupon verification delay
     setCouponError("");
-    setAppliedCoupon(null);
     toast.info("Verifying coupon...");
     
-    // Fallback: Currently the backend does not have an open /apply-coupon endpoint.
-    // If the backend had one, we would call `applyCoupon(couponCode, cartItems)` here.
-    setTimeout(() => {
-      setCouponError("Invalid or expired coupon code");
-      toast.error("Invalid or expired coupon code");
-    }, 800);
+    try {
+      const res = await applyCoupon(couponCode);
+      const cartData = res.data || res;
+      const discount = cartData?.discountTotal || cartData?.coupon?.discountAmount || 0;
+      setAppliedCoupon({ code: couponCode, discountAmount: discount });
+      toast.success(`Coupon applied! You saved ₹${discount}`);
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.response?.data?.error || "Invalid or expired coupon code";
+      setCouponError(errMsg);
+      toast.error(errMsg);
+      setAppliedCoupon(null);
+    }
+  };
+
+  const handleRemoveCoupon = async () => {
+    try {
+      await removeCoupon();
+      setAppliedCoupon(null);
+      setCouponCode("");
+      toast.success("Coupon removed successfully.");
+    } catch (err) {
+      toast.error("Failed to remove coupon.");
+    }
   };
 
   const handleClearForm = () => {
@@ -238,7 +254,7 @@ export default function Cart() {
   const charges = calculateOrderCharges(subtotal);
   const shipping = cartItems.length > 0 ? charges.shippingFee : 0;
   const gst = cartItems.length > 0 ? charges.taxAmount : 0;
-  const grandTotal = cartItems.length > 0 ? charges.grandTotal : 0;
+  const grandTotal = cartItems.length > 0 ? charges.grandTotal - (appliedCoupon?.discountAmount || 0) : 0;
   const related = cartItems.slice(0, 4);
 
   // Success page pricing details
@@ -1432,6 +1448,13 @@ export default function Cart() {
                 <span>₹{gst.toLocaleString("en-IN")}.00</span>
               </div>
             </div>
+            
+            {appliedCoupon && (
+              <div className="flex justify-between text-emerald-600 font-semibold mb-2">
+                <span>Discount ({appliedCoupon.code}):</span>
+                <span>-₹{appliedCoupon.discountAmount.toLocaleString("en-IN")}.00</span>
+              </div>
+            )}
 
             <div className="mb-6 border-t border-gray-200 pt-5 mt-4">
               <p className="text-sm font-semibold mb-2">Have a coupon code?</p>
@@ -1441,14 +1464,24 @@ export default function Cart() {
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
                   placeholder="Enter code"
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-red-500 outline-none uppercase"
+                  disabled={!!appliedCoupon}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:border-red-500 outline-none uppercase disabled:bg-gray-100 disabled:text-gray-500"
                 />
-                <button
-                  onClick={handleApplyCoupon}
-                  className="bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-800 transition"
-                >
-                  Apply
-                </button>
+                {appliedCoupon ? (
+                  <button
+                    onClick={handleRemoveCoupon}
+                    className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded text-sm font-semibold hover:bg-red-100 transition"
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleApplyCoupon}
+                    className="bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-800 transition"
+                  >
+                    Apply
+                  </button>
+                )}
               </div>
               {couponError && <p className="text-red-500 text-xs mt-1.5">{couponError}</p>}
             </div>
@@ -1948,6 +1981,13 @@ export default function Cart() {
                 </span>
               </div>
             </div>
+            
+            {appliedCoupon && (
+              <div className="flex justify-between text-emerald-600 text-sm font-semibold mb-2 mt-4">
+                <span>Discount ({appliedCoupon.code}):</span>
+                <span>-₹{appliedCoupon.discountAmount.toLocaleString("en-IN")}.00</span>
+              </div>
+            )}
 
             <div className="mb-4 mt-4 border-t border-gray-200 pt-4">
               <p className="text-xs font-semibold mb-2 text-gray-700">Have a coupon code?</p>
@@ -1957,14 +1997,24 @@ export default function Cart() {
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
                   placeholder="Enter code"
-                  className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:border-red-500 outline-none uppercase"
+                  disabled={!!appliedCoupon}
+                  className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:border-red-500 outline-none uppercase disabled:bg-gray-100 disabled:text-gray-500"
                 />
-                <button
-                  onClick={handleApplyCoupon}
-                  className="bg-black text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-gray-800 transition"
-                >
-                  Apply
-                </button>
+                {appliedCoupon ? (
+                  <button
+                    onClick={handleRemoveCoupon}
+                    className="bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded text-xs font-semibold hover:bg-red-100 transition"
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleApplyCoupon}
+                    className="bg-black text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-gray-800 transition"
+                  >
+                    Apply
+                  </button>
+                )}
               </div>
               {couponError && <p className="text-red-500 text-[10px] mt-1">{couponError}</p>}
             </div>

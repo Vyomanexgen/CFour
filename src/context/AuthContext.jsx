@@ -78,9 +78,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password, fallbackName = null) => {
-    const data = await loginApi(email, password);
-    const payload = data.data || data;
+  const handleLoginSuccess = async (payload, fallbackName = null) => {
     localStorage.setItem("accessToken", payload.accessToken);
     if (payload.refreshToken) {
       localStorage.setItem("refreshToken", payload.refreshToken);
@@ -88,6 +86,32 @@ export const AuthProvider = ({ children }) => {
     await fetchProfile(fallbackName);
     toast.success("Login successful. Welcome back!");
     return payload;
+  };
+
+  const login = async (email, password, fallbackName = null) => {
+    const data = await loginApi(email, password);
+    const payload = data.data || data;
+    
+    // Check if 2FA is required
+    if (payload.requires2FA) {
+      return payload; // Return so the UI can prompt for code
+    }
+    
+    return await handleLoginSuccess(payload, fallbackName);
+  };
+
+  const loginWith2FA = async (tempToken, token, fallbackName = null) => {
+    const { verify2FALogin } = await import("../api/authApi");
+    const data = await verify2FALogin(tempToken, token);
+    const payload = data.data || data;
+    return await handleLoginSuccess(payload, fallbackName);
+  };
+
+  const loginWithGoogle = async (idToken, fallbackName = null) => {
+    const { googleAuth } = await import("../api/authApi");
+    const data = await googleAuth(idToken);
+    const payload = data.data || data;
+    return await handleLoginSuccess(payload, fallbackName);
   };
 
   const register = async (email, password, fullName = null) => {
@@ -132,7 +156,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWith2FA, loginWithGoogle, register, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );
