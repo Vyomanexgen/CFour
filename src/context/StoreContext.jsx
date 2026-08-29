@@ -25,8 +25,15 @@ export const StoreProvider = ({ children }) => {
       const raw = res.data || res;
       
       if (raw.navItems) {
-        // Sort nav items by order
-        setNavItems([...raw.navItems].sort((a, b) => a.order - b.order));
+        // Recursively sort nav items and their sub-items by order
+        const sortNavItems = (items) => {
+          if (!items || !Array.isArray(items)) return [];
+          return [...items].sort((a, b) => a.order - b.order).map(item => ({
+            ...item,
+            subItems: sortNavItems(item.subItems)
+          }));
+        };
+        setNavItems(sortNavItems(raw.navItems));
       }
       if (raw.hero?.banners) {
         setBanners(raw.hero.banners);

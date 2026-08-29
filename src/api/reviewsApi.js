@@ -9,7 +9,15 @@ export const getProductReviews = async (productId, params = {}) => {
       ...params
     }
   });
-  return response.data?.data || response.data || { reviews: [], total: 0 };
+  const resData = response.data || {};
+  let reviews = [];
+  if (Array.isArray(resData.data)) {
+    reviews = resData.data;
+  } else if (Array.isArray(resData)) {
+    reviews = resData;
+  }
+  const total = resData.total || reviews.length || 0;
+  return { reviews, total };
 };
 
 export const submitReview = async (reviewData) => {

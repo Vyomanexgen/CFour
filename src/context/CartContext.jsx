@@ -76,9 +76,9 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (product, quantity = 1) => {
     setCartError(null);
     // Normalize product and variant parameters
-    const productId = product.productId || product._id;
+    const productId = product.productId || product._id || product.id;
     const defaultVariant = product.variants?.[0];
-    const variantId = product.variantId || defaultVariant?._id;
+    const variantId = product.variantId || defaultVariant?._id || defaultVariant?.id;
     
     if (!productId || !variantId) {
       const err = "Product ID and Variant ID are required.";
